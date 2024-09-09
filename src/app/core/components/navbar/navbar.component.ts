@@ -251,6 +251,15 @@ export class NavbarComponent implements OnInit {
     this.router.navigateByUrl("/openapi/management");
   }
 
+  toMiddleware(): void {
+    this.router.navigateByUrl("/middleware")
+  }
+
+  toMiddlewareMenu() {
+    this.isHamburger = false;
+    this.router.navigateByUrl("/middleware");
+  }
+
   // toDocument(): void {
   //   this.router.navigateByUrl("/openapi/document");
   // }

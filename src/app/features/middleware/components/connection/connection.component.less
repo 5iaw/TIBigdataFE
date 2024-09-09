@@ -1,0 +1,84 @@
+.content-container {
+  grid-area: main;
+  display: grid;
+  align-content: stretch;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  grid-template-rows: min-content;
+  gap: 20px 20px;
+  grid-template-areas: "menu menu menu menu menu body body body body body body body body body body ";
+}
+
+app-connection-menu {
+  grid-area: menu;
+}
+.content {
+  grid-area: body;
+  margin-top: 4rem;
+  border: 1px solid darkgray;
+  border-radius: 15px;
+  padding: 1.6rem 2rem;
+}
+
+.content > p {
+  font-size: 1.5rem;
+}
+
+@media all and (max-width: 425px){
+  .content-container {
+    grid-area: main;
+    display: grid;
+    align-content: stretch;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    grid-template-rows: min-content;
+    gap: 20px 20px;
+    grid-template-areas: "menu menu menu menu menu menu menu menu menu menu"
+                        "body body body body body body body body body body ";
+  }
+
+  .content {
+    grid-area: body;
+    margin-top: 0;
+    border: 0;
+    padding: 1.6rem 2rem;
+  }
+}
+
+.section-header{
+  display: block;
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+.section-info{
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 500 ;
+}
+
+.search-container {
+  display: flex;            /* Use flexbox layout */
+  align-items: center;      /* Vertically center the items */
+  gap: 10px;                /* Space between the text box and button */
+  margin-bottom: 20px;      /* Space below the search container */
+}
+
+.search-input {
+  width: 100px;                  /* Allow the input to grow and fill available space */
+}
+
+.search-button {
+  padding: 0.5rem 1rem;    /* Padding inside the button */
+  font-size: 1rem;         /* Font size of the button text */
+  background-color: beige; /* Background color */
+  border: none;            /* Remove default border */
+  border-radius: 5px;     /* Rounded corners */
+  cursor: pointer;         /* Pointer cursor on hover */
+  transition: background-color 0.3s; /* Smooth transition for background color */
+}
+
+.search-button:hover {
+  background-color: lightblue; /* Darker background color on hover */
+}
+
+.results-container {
+  margin-top: 20px;         /* Space above the results section */
+}

@@ -1,0 +1,32 @@
+<div class="content-container">
+  
+  <section class="content">
+  <span class="section-header">Middleware</span>
+  <span class="section-info">Testing connection to ElasticSearch...</span>
+  <hr>
+
+  <!-- Keyword Search Input -->
+  <div class="search-container">
+    <input
+      type="text"
+      [(ngModel)]="keyword"
+      placeholder="Enter keyword"
+      class="search-input"
+    />
+    <button (click)="onSearch()" class="search-button">Search</button>
+  </div>
+
+  <!-- Display search results -->
+  <div *ngIf="searchResults.length > 0">
+    <h3>Search Results:</h3>
+    <ul>
+      <li *ngFor="let result of searchResults">
+        <p><strong>Title:</strong> {{result.source.post_title}}</p>
+        <p><strong>Author:</strong> {{result.source.post_writer}}</p>
+        <hr>
+      </li>
+    </ul>
+  </div>
+  
+</section>
+</div>

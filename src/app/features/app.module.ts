@@ -25,6 +25,8 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import {ArticleLibraryComponent} from './article-library/components/article-library-root/article-library.component';
 import {SearchBarComponent} from '../shared/component/search-bar/search-bar.component';
 
+import {MiddlewareModule} from "./middleware/middleware.module";
+
 export function createTranslateLoader(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }

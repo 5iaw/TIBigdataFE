@@ -76,6 +76,13 @@ const routes: Routes = [
         (m) => m.OpenApiModule
       ),
   },
+  {
+    path: "middleware",
+    loadChildren: () =>
+      import("./middleware/middleware.module").then(
+        (m) => m.MiddlewareModule
+      ),
+  },
 ];
 
 @NgModule({

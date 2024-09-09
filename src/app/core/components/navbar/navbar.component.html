@@ -90,6 +90,13 @@
               <a (click)="toOpenAPI()">Open API</a>
             </div>
             </li>
+
+            <li [ngStyle]="selectedStyleObject(getSelectedMenu() === 'middleware')" class="middleware-menu">
+              <div class="dropdown-container">
+                <a (click)="toMiddleware()">Middleware</a>
+              </div>
+            </li>
+            
           </ul>
 
         <ul *ngIf="!getIsSignedIn()" class="login-menu-tablet">
