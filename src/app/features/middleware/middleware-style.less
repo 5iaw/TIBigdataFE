@@ -1,0 +1,30 @@
+.content-container {
+    grid-area: main;
+    display: grid;
+    align-content: stretch;
+    grid-template-columns: repeat(15, minmax(0, 1fr));
+    grid-template-rows: min-content;
+    gap: 20px 20px;
+    grid-template-areas: "menu menu menu menu menu body body body body body body body body body body ";
+  }
+
+  app-analysis-menu {
+    grid-area: menu;
+  }
+  .content {
+    grid-area: body;
+    margin-top: 4.5rem;
+    border: 1px solid darkgray;
+    border-radius: 20px;
+    padding: 1.6rem 2rem;
+  }
+
+  .content > p {
+    font-size: 1.5rem;
+  }
+
+  .content > hr{
+    border: 0.5px solid #DDDDDD;
+    margin-top : 20px;
+    margin-bottom: 10px;
+  }
