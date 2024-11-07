@@ -10,9 +10,5 @@ import { HttpClient } from '@angular/common/http';
 export class AnalysisComponent {
   constructor(public router: Router) { }
 
-  toPreprocessing() {
-    this.router.navigateByUrl("/middleware/analysis");
-}
-
 
 }
