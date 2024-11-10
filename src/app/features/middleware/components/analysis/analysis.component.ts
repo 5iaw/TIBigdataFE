@@ -22,9 +22,9 @@ export class AnalysisComponent {
   jobStatus: string = 'Waiting for job to start...';
   isJobCompleted: boolean = false;
 
-  private initialInterval: number = 30000; // 30 seconds for the first poll
-  private subsequentInterval: number = 3000; // 3 seconds for subsequent polls
-  private currentInterval: number = this.initialInterval; // Start with the initial interval
+//   private initialInterval: number = 30000; // 30 seconds for the first poll
+//   private subsequentInterval: number = 3000; // 3 seconds for subsequent polls
+//   private currentInterval: number = this.initialInterval; // Start with the initial interval
 
 //   submitWordCount(displayValue: string) {
 //     const payload = { display_value: displayValue };
