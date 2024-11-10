@@ -13,52 +13,17 @@
                 margin-right: 10px;
             }
         </style>
-        <script>
-            async function submitJob(endpoint, args) {
-                try {
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(args)
-                    });
-
-                    // Check if response is ok
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    window.location.href = '/analysis_result';
-                    alert(JSON.stringify(result));
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                }
-            }
-
-            function submitWithArgs(endpoint, ...inputIds) {
-                let args = {};
-
-                // Get values from input fields
-                inputIds.forEach(id => {
-                    const inputElement = document.getElementById(id);
-                    if (inputElement) {
-                        args[id] = inputElement.value;
-                    }
-                });
-
-                submitJob(endpoint, args);
-            }
-        </script>
+        
     </head>
 <body>
-    <h1>File Analysis</h1>
+    <h1>Analysis Options</h1>
 
     <!-- WordCount Analysis -->
     <div class="job-section">
         <h3>WordCount Analysis</h3> 
         <label for="display_value">Number of words: </label>
-        <input type="text" id="display_value" placeholder="Enter Display-Value">
-        <button onclick="submitWithArgs('/submit_wordcount', 'display_value')">Submit WordCount Job</button>
+        <input type="text" [(ngModel)]="displayValue" placeholder="Enter Display-Value">
+        <button (click)="submitWordCount()">Submit WordCount Job</button>
     </div>
 
     <!-- K-Means Analysis -->
