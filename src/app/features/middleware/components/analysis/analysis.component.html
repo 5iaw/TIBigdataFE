@@ -1,11 +1,162 @@
-<header>
-
-    <div class="content-container">
-      <app-connection></app-connection>
-      <section class="content">
-        <h1>Spark Analysis</h1>
-      </section>
+<div class="content-container">
+    <app-connection></app-connection>
+    <section class="content">
+  
+    <span class="section-header">{{'analysis.analysisSelection'|translate}}</span>
+    <span class="section-info">{{'analysis.selectAnalysis'|translate}}</span>
+    <hr>
+    <div class="pop-container">
+      <div class="pop-block">
+        <div class="pop-head" id="count-head" (click)="showPop('count')">{{'analysis.frequencyAnalysis'|translate}}
+          <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        /></div>
+        <div class="pop-body" id="count">
+          {{'analysis.numOfWords'|translate}}<input type="number" value="100" min='1' max='500' id='count_option1'>
+          <button (click)="runAnalysis('count')">{{'analysis.startAnalysis'|translate}}</button>
       </div>
-      </header>
-
+    </div>
+  
+    <div class="pop-block">
+      <div class="pop-head" id="tfidf-head"(click)="showPop('tfidf')">TFIDF
+        <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        />
+      </div>
+      <div class="pop-body" id="tfidf">
+        {{'analysis.numOfWords'|translate}}<input type="number" value="100" min='1' max='500' id='tfidf_option1'>
+        <button (click)="runAnalysis('tfidf')">{{'analysis.startAnalysis'|translate}}</button>
+      </div>
+    </div>
+  
+      <div class="pop-block">
+        <div class="pop-head" id="kmeans-head"(click)="showPop('kmeans')">{{'analysis.kclusterAnalysis'|translate}}
+          <img class="tooltip" src="../../../../assets/icons/help-gray.png"
+        />
+        </div>
+        <div class="pop-body" id="kmeans">
+          {{'analysis.clusterNum'|translate}}<input type="number" value="5" min='1' max='500' id='kmeans_option1'>
+  
+          <button (click)="runAnalysis('kmeans')">{{'analysis.startAnalysis'|translate}}</button>
+        </div>
+    </div>
+  
+    <div class="pop-block">
+      <div class="pop-head" id="hcluster-head" (click)="showPop('hcluster')">{{'analysis.hclusterAnalysis'|translate}}
+        <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        />
+      </div>
+      <div class="pop-body" id="hcluster">
+  
+        <button (click)="runAnalysis('hcluster')">{{'analysis.startAnalysis'|translate}}</button>
+      </div>
+    </div>
+  
+    
+    <div class="pop-block">
+      <div class="pop-head" id="network-head" (click)="showPop('network')">{{'analysis.semanticNetworkAnalysis'|translate}}
+        <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        />
+      </div>
+      <div class="pop-body" id="network">
+        {{'analysis.numOfWords'|translate}}<input type="number" value="50" min='1' max='500' id='network_option1'>
+        <br>
+        {{'analysis.connectionIntensity'|translate}}<input type="number" value="75" min='1' max='100' id='network_option2'>
+        <button (click)="runAnalysis('network')">{{'analysis.startAnalysis'|translate}}</button>
+      </div>
+    </div>
+  
+    <div class="pop-block">
+      <div class="pop-head" id="ngrams-head" (click)="showPop('ngrams')">N-gram
+        <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        />
+      </div>
+      <div class="pop-body" id="ngrams">
+        {{'analysis.ngramNum'|translate}}<input type="number" value="50" min='1' max='500' id='ngrams_option1'>
+        <br>
+        <!-- {{'analysis.numOfWords'|translate}}<input type="number" value="10" min='1' max='500' id='ngrams_option2'>
+        <br> -->
+        {{'analysis.connectionIntensity'|translate}}<input type="number" value="100" min='1' max='500' id='ngrams_option3'>
+  
+        <button (click)="runAnalysis('ngrams')">{{'analysis.startAnalysis'|translate}}</button>
+      </div>
+    </div>
+  
+    <div class="pop-block">
+      <div class="pop-head" id="word2vec-head" (click)="showPop('word2vec')">{{'analysis.synonymsAnalysis'|translate}}
+        <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        />
+      </div>
+  
+      <div class="pop-body" id="word2vec">
+        {{'analysis.numOfWords'|translate}}<input type="number" value="70" min='1' max='500' id='word2vec_option1'>
+  
+        <button (click)="runAnalysis('word2vec')">{{'analysis.startAnalysis'|translate}}</button>
+      </div>
+    </div>
+  
+  
+    <div class="pop-block">
+      <div class="pop-head" id="topicLDA-head" (click)="showPop('topicLDA')">{{'analysis.topicModeling'|translate}}
+        <img class="tooltip"
+          src="../../../../assets/icons/help-gray.png"
+        />
+      </div>
+  
+      <div class="pop-body" id="topicLDA">
+        {{'analysis.topicNum'|translate}}<input type="number" value="10" min='1' max='500' id='topicLDA_option1'>
+  
+        <button (click)="runAnalysis('topicLDA')">{{'analysis.startAnalysis'|translate}}</button>
+      </div>
+    </div>
+    </div>
+  
+    <section class='section-result' >
+  
+      <span class="section-header" *ngIf="isDataPreview">{{'analysis.preprocessingPreview'|translate}}</span>
+      <span class="section-info" *ngIf="isDataPreview">{{'analysis.preprocessingPreviewDetail'|translate}}</span>
+      <hr *ngIf="isDataPreview">
+  
+      <figure id='pretable'></figure>
+      <span class="section-header" *ngIf="isDataAnalysised">{{'analysis.analysisResult'|translate}}</span>
+      <span class="section-info" *ngIf="isDataAnalysised">{{'analysis.analysisResultDetail'|translate}}</span>
+      <hr *ngIf="isDataAnalysised">
+  
+      <figure id="table"></figure>
+      <!-- <table>
+        <tr>
+          <th>No</th>
+          <th>단어</th>
+          <th>빈도</th>
+        </tr>
+        <tbody>
+          <tr *ngFor="let data of analysisedData;index as idx">
+            <td>{{ idx }}</td>
+            <td>{{ data['word'] }}</td>
+            <td>{{ data['value'] }}</td>
+          </tr>
+        </tbody>
+      </table> -->
+    <!-- </div> -->
+    <figure id="wordcloud"></figure>
+  
+    <figure id="bar"></figure>
+    <figure id="network"></figure>
+    <figure id="scatter"></figure>
+    <figure id="tree"></figure>
+    <figure id="ldavis"></figure>
+  
+    <button (click)="saveSvg()" class="run" *ngIf="isDataAnalysised">{{'analysis.save2myAnalysis'|translate}}</button>
+    <button (click)="downloadPng()" class="run" *ngIf="isDataAnalysised">{{'analysis.downloadChartImage'|translate}}</button>
+    
+    <!-- <button (click)="toMyAnalysis()" class="run" *ngIf="isDataAnalysised">내 분석함 이동</button> -->
+  
+  </section>
+  
+    </section>
+  </div>
   

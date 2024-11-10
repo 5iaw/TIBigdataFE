@@ -1,27 +1,16 @@
-<div class="community-board-container">
-  <section class="community-board">
-    <h1>{{ title }}</h1>
+<aside class="app-analysis-menu-container">
+  <h1>{{ title }}</h1>
   <div class="menus">
     <ul>
-      <li
-        [ngStyle]="selectedStyleObject(currentMenu == 'fileupload')"
-        class="menu-item"
-        id="fileupload">
+      <li [ngStyle]="selectedStyleObject(currentMenu == 'fileupload')" class="menu-item" id="fileupload">
         <a (click)="toFileUpload()">File Uploads</a>
       </li>
-      <li
-        [ngStyle]="selectedStyleObject(currentMenu == 'es')"
-        class="menu-item"
-        id="es">
+      <li [ngStyle]="selectedStyleObject(currentMenu == 'es')" class="menu-item" id="es">
         <a (click)="toElasticSearch()">Search Menu</a>
       </li>
-      <li
-        [ngStyle]="selectedStyleObject(currentMenu == 'analysis')"
-        class="menu-item"
-        id="analysis">
+      <li [ngStyle]="selectedStyleObject(currentMenu == 'analysis')" class="menu-item" id="analysis">
         <a (click)="toAnalysis()">Analysis</a>
       </li>
     </ul>
-    </div>
-  </section>
-</div>
+  </div>
+</aside>

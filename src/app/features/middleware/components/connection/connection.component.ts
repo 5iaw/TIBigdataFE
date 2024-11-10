@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './connection.component.html',
   styleUrls: ['./connection.component.less']
 })
-export class ConnectionComponent {
+export class ConnectionComponent implements OnInit {
   keyword: string = '';  // Holds the input keyword
   searchResults: any[] = [];  // Holds the search results
 
@@ -53,23 +53,23 @@ export class ConnectionComponent {
    * @param currentAddress
    */
   setTitle(currentAddress: string) {
-    if (currentAddress === "manual") this.title = 'File Upload';
-    if (currentAddress === "preprocessing") this.title = "Search Menu";
+    if (currentAddress === "fileupload") this.title = 'File Upload';
+    if (currentAddress === "es") this.title = "Search Menu";
     if (currentAddress === "analysis") this.title = "Analysis Menu";
   }
 
   toFileUpload() {
-    this.router.navigateByUrl("/components/connection/fileupload");
+    this.router.navigateByUrl("/connection/fileupload");
     this.ngOnInit();
   }
 
   toElasticSearch() {
-    this.router.navigateByUrl("/components/connection/search");
+    this.router.navigateByUrl("/connection/search");
     this.ngOnInit();
   }
 
   toAnalysis() {
-    this.router.navigateByUrl("/components/connection/analysis");
+    this.router.navigateByUrl("/connection/analysis");
     this.ngOnInit();
   }
 

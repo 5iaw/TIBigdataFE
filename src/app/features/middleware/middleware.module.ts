@@ -22,6 +22,6 @@ import { HttpClientModule } from '@angular/common/http';  // Import HttpClientMo
       TranslateModule,
       FormsModule,
       HttpClientModule],
-    exports: [ConnectionComponent]
+    // exports: [ConnectionComponent, MiddlewareRoutingModule]
 })
 export class MiddlewareModule {}
