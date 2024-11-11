@@ -12,15 +12,37 @@ import { HttpHeaders } from '@angular/common/http';
   templateUrl: './analysis.component.html',
   styleUrls: ['../../middleware-style.less'],
 })
-export class AnalysisComponent {
+export class AnalysisComponent implements OnInit {
   displayValue: string = '';
-  private middlewareUrl = 'http://localhost:10000'; 
+  private middlewareUrl = 'http://localhost:10000/spark'; 
   
     constructor(private http: HttpClient) { }
   
     jobId: string | null = null;
   jobStatus: string = 'Waiting for job to start...';
   isJobCompleted: boolean = false;
+  connectionStatus: string = 'Checking connection...';
+  results: string | null =  null;
+  path: string = 'flask/web_upload_file1.txt'
+
+  ngOnInit(): void {
+    this.testConnection(); // Check connection to middleware on initialization
+  }
+
+  testConnection(): void {
+    const testUrl = `${this.middlewareUrl}/test-connection`;
+    this.http.get(testUrl).subscribe(
+      () => {
+        console.log('Connection to middleware successful');
+        this.connectionStatus = 'Connected to middleware';
+      },
+      (error) => {
+        console.error('Unable to connect to middleware:', error);
+        this.connectionStatus = 'Failed to connect to middleware';
+      }
+    );
+  }
+
 
 //   private initialInterval: number = 30000; // 30 seconds for the first poll
 //   private subsequentInterval: number = 3000; // 3 seconds for subsequent polls
@@ -80,6 +102,8 @@ submitWordCount(): void {
           if (status.state === 'success') {
             this.jobStatus = 'Job completed successfully!';
             this.isJobCompleted = true;
+            console.log(this.getAnalysisResult(this.path));
+
           } else if (status.state === 'failed') {
             this.jobStatus = 'Job failed.';
             this.isJobCompleted = true;
@@ -150,5 +174,18 @@ submitWordCount(): void {
     return this.http.get<{ state: string }>(url);
   }
 
+  getAnalysisResult(path: string) {
+    const url = `${this.middlewareUrl}/analysis/${path}`; // Flask backend URL to get analysis result
+    console.log("Getting results from ", url);
+    this.http.get<{ result: string }>(url).subscribe(
+      (response) => {
+        console.log('Analysis result:', response.result);
+        //this.displayAnalysisResult(response.result); // Update UI with the result
+      },
+      (error) => {
+        console.error('Error fetching analysis result:', error);
+      }
+    );
+  }
 
 }
