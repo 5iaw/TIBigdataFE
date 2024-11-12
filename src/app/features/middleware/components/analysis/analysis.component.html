@@ -19,6 +19,7 @@
     <h1>Analysis Options</h1>
 
     <!-- WordCount Analysis -->
+    <div class="analysis">
     <div class="job-section">
         <h3>WordCount Analysis</h3> 
         <label for="display_value">Number of words: </label>
@@ -105,11 +106,24 @@
     </div>
 
     <!-- Form to get job logs -->
-    <h3>Get Job Log</h3>
+    <!-- <h3>Get Job Log</h3>
     <form action="/log" method="GET">
         <input type="text" name="batch_id" placeholder="Enter Batch ID" required>
         <button type="submit">Get Log</button>
-    </form>
+    </form> -->
+    </div>
+
+    <div class="results">
+
+        <figure id="table"></figure>
+        <figure id="wordcloud"></figure>
+
+        <figure id="bar"></figure>
+        <figure id="network"></figure>
+        <figure id="scatter"></figure>
+        <figure id="tree"></figure>
+        <figure id="ldavis"></figure>
+    </div>
 </body>
 
     </section>
