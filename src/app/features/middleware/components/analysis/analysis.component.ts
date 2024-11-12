@@ -14,11 +14,29 @@ import { HttpHeaders } from '@angular/common/http';
 })
 export class AnalysisComponent implements OnInit {
   displayValue: string = '';
+<<<<<<< HEAD
+  k_value: string='';
+  w2v_value: string='';
+  tfidf_value: string='';
+  lda_value: string='';
+  sma_wordsnum: string='';
+  sma_ls: string='';
+  ngrams_value: string='';
+  ngrams_ls: string='';
+  ngrams_param:string='';
+
+  private middlewareUrl = 'http://localhost:10000/spark'; 
+  
+    constructor(private http: HttpClient) { }
+  
+    jobId: string | null = null;
+=======
   private middlewareUrl = 'http://localhost:10000/spark';
 
   constructor(private http: HttpClient) { }
 
   jobId: string | null = null;
+>>>>>>> 396e1b0f3184bfbbae0f6ca2604df82fd3914b53
   jobStatus: string = 'Waiting for job to start...';
   isJobCompleted: boolean = false;
   connectionStatus: string = 'Checking connection...';
@@ -88,6 +106,178 @@ submitWordCount(): void {
       this.jobStatus = 'Please enter a valid display value.';
     }
   }
+
+  submitKMeans(): void {
+    if (this.k_value && this.k_value.trim() !== '') {
+      console.log('Submitting K-Means job with value:', this.k_value);
+
+    console.log("Posting to ",  this.middlewareUrl + "/submit_kmeans");
+      // Prepare payload to send to backend
+      const payload = { k_value: this.k_value };
+
+      // Send the job submission request
+      this.http.post(`${this.middlewareUrl}/submit_kmeans`, payload).subscribe(
+        (response: any) => {
+          console.log('Job submitted successfully:', response);
+          this.jobId = response.id;  // Assuming the response contains the job ID
+          this.jobStatus = 'Job submitted, waiting for completion...';
+
+          // Now, periodically check the job status
+          this.pollJobStatus();
+        },
+        (error) => {
+          console.error('Error submitting job:', error);
+          this.jobStatus = 'Failed to submit the job.';
+        }
+      );
+    } else {
+      console.log('Please enter a valid k value.');
+      this.jobStatus = 'Please enter a valid k value.';
+    }
+  }
+
+  submitTFIDF(): void {
+    if (this.tfidf_value && this.tfidf_value.trim() !== '') {
+      console.log('Submitting TFIDF job with value:', this.tfidf_value);
+
+    console.log("Posting to ",  this.middlewareUrl + "/submit_tfidf");
+      // Prepare payload to send to backend
+      const payload = { tfidf_param: this.tfidf_value };
+
+      // Send the job submission request
+      this.http.post(`${this.middlewareUrl}/submit_tfidf`, payload).subscribe(
+        (response: any) => {
+          console.log('Job submitted successfully:', response);
+          this.jobId = response.id;  // Assuming the response contains the job ID
+          this.jobStatus = 'Job submitted, waiting for completion...';
+
+          // Now, periodically check the job status
+          this.pollJobStatus();
+        },
+        (error) => {
+          console.error('Error submitting job:', error);
+          this.jobStatus = 'Failed to submit the job.';
+        }
+      );
+    } else {
+      console.log('Please enter a valid value.');
+      this.jobStatus = 'Please enter a valid value.';
+    }
+  }
+
+  submitW2V(): void {
+    if (this.w2v_value && this.w2v_value.trim() !== '') {
+      console.log('Submitting Word2Vec job with value:', this.w2v_value);
+
+    console.log("Posting to ",  this.middlewareUrl + "/submit_w2v");
+      // Prepare payload to send to backend
+      const payload = { w2v_param: this.w2v_value };
+
+      // Send the job submission request
+      this.http.post(`${this.middlewareUrl}/submit_w2v`, payload).subscribe(
+        (response: any) => {
+          console.log('Job submitted successfully:', response);
+          this.jobId = response.id;  // Assuming the response contains the job ID
+          this.jobStatus = 'Job submitted, waiting for completion...';
+
+          // Now, periodically check the job status
+          this.pollJobStatus();
+        },
+        (error) => {
+          console.error('Error submitting job:', error);
+          this.jobStatus = 'Failed to submit the job.';
+        }
+      );
+    } else {
+      console.log('Please enter a valid value.');
+      this.jobStatus = 'Please enter a valid value.';
+    }
+  }
+
+  submitLDA(): void {
+    if (this.lda_value && this.lda_value.trim() !== '') {
+      console.log('Submitting Topic LDA job with value:', this.lda_value);
+
+    console.log("Posting to ",  this.middlewareUrl + "/submit_lda");
+      // Prepare payload to send to backend
+      const payload = { lda_param: this.lda_value };
+
+      // Send the job submission request
+      this.http.post(`${this.middlewareUrl}/submit_lda`, payload).subscribe(
+        (response: any) => {
+          console.log('Job submitted successfully:', response);
+          this.jobId = response.id;  // Assuming the response contains the job ID
+          this.jobStatus = 'Job submitted, waiting for completion...';
+
+          // Now, periodically check the job status
+          this.pollJobStatus();
+        },
+        (error) => {
+          console.error('Error submitting job:', error);
+          this.jobStatus = 'Failed to submit the job.';
+        }
+      );
+    } else {
+      console.log('Please enter a valid value.');
+      this.jobStatus = 'Please enter a valid value.';
+    }
+  }
+
+  submitSMA(): void {  // skipped
+    if (this.sma_wordsnum && this.sma_ls) {
+        console.log('Submitting Semantic Network Analysis with params:', this.sma_wordsnum, this.sma_ls);
+
+        // Prepare payload with both parameters
+        const payload = { optionList: this.sma_wordsnum, linkStrength: this.sma_ls };
+
+        // Send the job submission request
+        this.http.post(`${this.middlewareUrl}/submit_sma`, payload).subscribe(
+            (response: any) => {
+                console.log('Job submitted successfully:', response);
+                this.jobId = response.id;  // Assuming the response contains the job ID
+                this.jobStatus = 'Job submitted, waiting for completion...';
+
+                // Poll job status
+                this.pollJobStatus();
+            },
+            (error) => {
+                console.error('Error submitting job:', error);
+                this.jobStatus = 'Failed to submit the job.';
+            }
+        );
+    } else {
+        console.log('Please enter valid parameters.');
+        this.jobStatus = 'Please enter valid parameters.';
+    }
+}
+
+submitNgrams(): void {  
+  if (this.ngrams_value && this.ngrams_ls && this.ngrams_param) {
+      console.log('Submitting Semantic Network Analysis with params:', this.ngrams_ls, this.ngrams_param, this.ngrams_ls);
+
+      // Prepare payload with both parameters
+      const payload = { optionList: this.ngrams_value, n: this.ngrams_param, linkStrength: this.ngrams_ls };
+
+      // Send the job submission request
+      this.http.post(`${this.middlewareUrl}/submit_ngrams`, payload).subscribe(
+          (response: any) => {
+              console.log('Job submitted successfully:', response);
+              this.jobId = response.id;  // Assuming the response contains the job ID
+              this.jobStatus = 'Job submitted, waiting for completion...';
+
+              // Poll job status
+              this.pollJobStatus();
+          },
+          (error) => {
+              console.error('Error submitting job:', error);
+              this.jobStatus = 'Failed to submit the job.';
+          }
+      );
+  } else {
+      console.log('Please enter valid parameters.');
+      this.jobStatus = 'Please enter valid parameters.';
+  }
+}
 
 //   poll for 10s each
   pollJobStatus(): void {

@@ -56,6 +56,7 @@ export function createTranslateLoader(http: HttpClient) {
     SearchResultModule,
     UserpageModule,
     OpenApiModule,
+    MiddlewareModule,
   ],
   exports: [],
   providers: [AuthGuard, AuthenticationService, TokenInterceptorService, ArticleLibraryComponent, SearchBarComponent],

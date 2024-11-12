@@ -8,6 +8,7 @@ import { SharedModule } from "src/app/shared/shared.module";
 import {TranslateModule} from '@ngx-translate/core';
 
 import { FormsModule } from '@angular/forms';  // Import FormsModule
+import { ElasticSearchComponent } from "./components/elasticsearch/elasticsearch.component";
 import { HttpClientModule } from '@angular/common/http';
 import { UploadComponent } from './components/upload/upload.component';
 import { FileListComponent } from './components/file-list/file-list.component';
@@ -17,6 +18,7 @@ import { TransferComponent } from './components/transfer/transfer.component';  /
   declarations: [
     ConnectionComponent,
     AnalysisComponent,
+    ElasticSearchComponent,
     UploadComponent,
     FileListComponent,
     TransferComponent
