@@ -1,0 +1,8 @@
+<div>
+  <h2>Upload File</h2>
+  <input type="file" (change)="onFileSelected($event)" />
+  <button (click)="uploadFile()">Upload</button>
+</div>
+<div *ngIf="uploadStatus">
+  <p>{{ uploadStatus }}</p>
+</div>

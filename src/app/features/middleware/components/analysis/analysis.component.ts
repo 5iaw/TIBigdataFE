@@ -14,6 +14,7 @@ import { HttpHeaders } from '@angular/common/http';
 })
 export class AnalysisComponent implements OnInit {
   displayValue: string = '';
+<<<<<<< HEAD
   k_value: string='';
   w2v_value: string='';
   tfidf_value: string='';
@@ -29,6 +30,13 @@ export class AnalysisComponent implements OnInit {
     constructor(private http: HttpClient) { }
   
     jobId: string | null = null;
+=======
+  private middlewareUrl = 'http://localhost:10000/spark';
+
+  constructor(private http: HttpClient) { }
+
+  jobId: string | null = null;
+>>>>>>> 396e1b0f3184bfbbae0f6ca2604df82fd3914b53
   jobStatus: string = 'Waiting for job to start...';
   isJobCompleted: boolean = false;
   connectionStatus: string = 'Checking connection...';
@@ -311,7 +319,7 @@ submitNgrams(): void {
 //         concatMap((status) => {
 //           // Log the job status response to check its structure
 //           console.log('Job Status Response:', status);
-          
+
 //           if (status.state === 'success' || status.state === 'failed') {
 //             // If job is complete or failed, stop polling
 //             this.isJobCompleted = true;

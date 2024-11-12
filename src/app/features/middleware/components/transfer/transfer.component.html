@@ -1,0 +1,10 @@
+<div>
+  <label>ES ID:</label>
+  <input [(ngModel)]="esId" placeholder="Enter Elasticsearch ID">
+</div>
+<div>
+  <label>Owner ID:</label>
+  <input [(ngModel)]="owner" placeholder="Enter Owner ID">
+</div>
+<button (click)="transferToHdfs()">Transfer</button>
+<p>{{ message }}</p>

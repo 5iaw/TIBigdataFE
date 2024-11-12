@@ -4,16 +4,16 @@ import { ConnectionComponent } from "./components/connection/connection.componen
 import { AnalysisComponent } from "./components/analysis/analysis.component";
 import { ElasticSearchComponent } from "./components/elasticsearch/elasticsearch.component";
 
+import { UploadComponent } from "./components/upload/upload.component"; // Include any additional components
+import { TransferComponent } from "./components/transfer/transfer.component"; // Example component
+import { FileListComponent } from './components/file-list/file-list.component';
+
 const routes: Routes = [
   {
     path: "",
-    redirectTo: "search",
+    redirectTo: "analysis",
     pathMatch: "prefix",
   },
-  // {
-  //   path: "fileupload",
-  //   component: FileUploadComponent,
-  // },
   {
     path: "search",
     component: ElasticSearchComponent,
@@ -22,10 +22,27 @@ const routes: Routes = [
     path: "analysis",
     component: AnalysisComponent,
   },
+  {
+    path: "connection", // Route for Connection component
+    component: ConnectionComponent,
+  },
+  {
+    path: "upload", // Route for Upload component (if needed)
+    component: UploadComponent,
+  },
+  {
+    path: "transfer", // Route for Transfer component (if needed)
+    component: TransferComponent,
+  },
+
+  {
+    path: "list-files", // Route for Transfer component (if needed)
+    component: FileListComponent,
+  },
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild(routes)], // Use RouterModule.forChild in feature modules
   exports: [RouterModule],
 })
 export class MiddlewareRoutingModule {}

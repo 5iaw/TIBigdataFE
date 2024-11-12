@@ -1,0 +1,7 @@
+<div *ngIf="files.length === 0">No files found.</div>
+<ul *ngIf="files.length > 0">
+  <li *ngFor="let file of files">
+    <span>{{ file.name }}</span>
+    <button (click)="downloadFile(file.path)">Download</button>
+  </li>
+</ul>

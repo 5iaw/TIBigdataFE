@@ -1,0 +1,48 @@
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-transfer',
+  templateUrl: './transfer.component.html',
+  styleUrls: ['./transfer.component.css']
+})
+export class TransferComponent {
+  esId: string = '';
+  owner: string = '';
+  message: string = '';
+  private apiUrl = 'http://localhost:10000/transfer';
+
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Sends the Elasticsearch ID and owner to the backend for transfer to HDFS
+   */
+  transferToHdfs(): void {
+    // Check if both fields have values
+    if (!this.esId || !this.owner) {
+      this.message = 'Please enter both the Elasticsearch ID and Owner ID';
+      return;
+    }
+
+    // Create the payload to send to the backend
+    const payload = {
+      es_id: this.esId,
+      owner: this.owner
+    };
+
+    // Send the data to the backend using an HTTP POST request
+    this.http.post<any>(this.apiUrl, payload).subscribe(
+      (response) => {
+        // Handle successful response
+        this.message = response.success
+          ? 'Transfer successful!'
+          : `Transfer failed: ${response.message}`;
+      },
+      (error) => {
+        // Handle error response
+        console.error('Error during transfer:', error);
+        this.message = 'An error occurred during the transfer process';
+      }
+    );
+  }
+}
