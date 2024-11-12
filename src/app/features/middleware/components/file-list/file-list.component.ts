@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { FileSystemEntity } from '../../models/FileSystemEntity.model';
+import { MiddlewareService } from '../../services/middleware.service';
 
 @Component({
   selector: 'app-file-list',
@@ -7,30 +8,68 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./file-list.component.css']
 })
 export class FileListComponent implements OnInit {
-  files: any[] = [];
-  errorMessage: string | null = null;
-  private apiUrl = 'http://localhost:10000/file/list';
+  files: FileSystemEntity[] = [];
+  owner = 'kubicuser';
+  currentPath = '/users/kubicuser';
 
-  constructor(private http: HttpClient) {}
+  constructor(private middlewareService: MiddlewareService) {}
 
   ngOnInit(): void {
-    this.getFiles();
+    this.loadFiles();
   }
 
-  getFiles(): void {
-    this.http.get<any>(`${this.apiUrl}?owner=kubicuser&folder_path=/users/kubicuser`).subscribe(
-      response => {
-        if (response.success) {
-          this.files = response.files;
-          this.errorMessage = null;
-        } else {
-          this.errorMessage = response.message || 'Could not retrieve file list';
-        }
-      },
-      error => {
-        this.errorMessage = `Error fetching file list: ${error.message}`;
-        console.error('Error details:', error);
+  loadFiles(): void {
+    this.middlewareService.getFileList(this.owner, this.currentPath).subscribe(response => {
+      if (response.success) {
+        this.files = response.contents;
       }
-    );
+    });
   }
+
+  navigateToFolder(folder: FileSystemEntity): void {
+    if (folder.type === 'folder') {
+      this.currentPath = folder.path;
+      this.loadFiles();
+    }
+  }
+
+  deleteFile(file: FileSystemEntity): void {
+    this.middlewareService.deleteFile(file.path).subscribe(response => {
+      if (response.success) {
+        this.loadFiles();
+      }
+    });
+  }
+
+  downloadFile(filePath: string, fileName: string): void {
+    this.middlewareService.downloadFile(filePath).subscribe(response => {
+      const blob = new Blob([response], { type: response.type });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+  createNewFolder(owner: string, path: string, folderName: string): void {
+    if (folderName.trim()) {
+      this.middlewareService.createFolder(owner, path, folderName).subscribe(
+        response => {
+          if (response.success) {
+            console.log('Folder created successfully');
+            // Optionally refresh the file list
+          } else {
+            console.error('Failed to create folder:', response.message);
+          }
+        },
+        error => {
+          console.error('Error creating folder:', error);
+        }
+      );
+    } else {
+      console.error('Folder name cannot be empty or spaces');
+    }
+  }
+
 }

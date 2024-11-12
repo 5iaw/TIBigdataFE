@@ -1,19 +1,18 @@
-export interface FileMetadata {
-    type: 'file' | 'folder';  // Type can be either 'file' or 'folder'
-    name: string;             // Name of the file or folder
-    path: string;             // Full path of the file or folder
-    parent_path: string | null; // Path of the parent folder, null if it's the root folder
-    owner: string;            // Owner of the file or folder
-    created_at: Date;         // Creation date
-    updated_at: Date;         // Last updated date
-    size: number;             // Size of the file (0 for folders)
-    hdfs_file_path?: string;  // HDFS path, only present for files
-    permissions: Permissions; // Permissions for the file or folder
-}
+import { FileSystemEntity } from './FileSystemEntity.model';
 
-// Permissions structure for defining read, write, and share permissions
-export interface Permissions {
-    read: string[];           // List of users/groups with read access
-    write: string[];          // List of users/groups with write access
-    share: boolean;           // Whether the file or folder can be shared
+export class File extends FileSystemEntity {
+    size: number;
+    hdfsFilePath?: string;
+
+    constructor(data: Partial<File> = {}) {
+        super(data);
+        this.size = data.size || 0;
+        this.hdfsFilePath = data.hdfsFilePath || '';
+        this.type = 'file';
+    }
+
+    // File-specific methods
+    download(): void {
+        console.log(`Downloading file: ${this.name}`);
+    }
 }
