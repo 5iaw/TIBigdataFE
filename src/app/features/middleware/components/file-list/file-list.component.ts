@@ -52,4 +52,24 @@ export class FileListComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     });
   }
+  createNewFolder(owner: string, path: string, folderName: string): void {
+    if (folderName.trim()) {
+      this.middlewareService.createFolder(owner, path, folderName).subscribe(
+        response => {
+          if (response.success) {
+            console.log('Folder created successfully');
+            // Optionally refresh the file list
+          } else {
+            console.error('Failed to create folder:', response.message);
+          }
+        },
+        error => {
+          console.error('Error creating folder:', error);
+        }
+      );
+    } else {
+      console.error('Folder name cannot be empty or spaces');
+    }
+  }
+
 }

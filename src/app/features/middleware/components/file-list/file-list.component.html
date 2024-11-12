@@ -9,6 +9,11 @@
       <button *ngIf="file.type === 'file'" (click)="downloadFile(file.path, file.name)">
         Download
       </button>
+
     </li>
   </ul>
+</div>
+<div>
+  <input type="text" [(ngModel)]="newFolderName" placeholder="Enter folder name" />
+  <button (click)="createNewFolder('kubicuser', '/users/kubicuser', newFolderName)">Create Folder</button>
 </div>

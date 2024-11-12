@@ -29,11 +29,21 @@ export class MiddlewareService {
   // Delete a file
   deleteFile(path: string): Observable<any> {
     const params = new HttpParams().set('path', path);
-    return this.http.delete(`${this.baseUrl}/file/delete`, { params });
+    return this.http.delete(`${this.baseUrl}/delete`, { params });
   }
     // Download a file
   downloadFile(path: string): Observable<Blob> {
     const params = new HttpParams().set('path', path);
     return this.http.get(`${this.baseUrl}/download`, { params, responseType: 'blob' });
+  }
+
+  // Create a new folder
+  createFolder(owner: string, path: string, folderName: string): Observable<any> {
+    const body = {
+      owner: owner,
+      path: path,
+      folder_name: folderName
+    };
+    return this.http.post(`${this.baseUrl}/folder/create`, body);
   }
 }
