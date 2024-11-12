@@ -8,7 +8,8 @@ import { HttpClient } from '@angular/common/http';
 })
 export class FileListComponent implements OnInit {
   files: any[] = [];
-  private apiUrl = 'http://localhost:10000/mongo/file/list';
+  errorMessage: string | null = null;
+  private apiUrl = 'http://localhost:10000/file/list';
 
   constructor(private http: HttpClient) {}
 
@@ -17,12 +18,18 @@ export class FileListComponent implements OnInit {
   }
 
   getFiles(): void {
-    this.http.get<any[]>(`${this.apiUrl}`).subscribe(
+    this.http.get<any>(`${this.apiUrl}?owner=kubicuser&folder_path=/users/kubicuser`).subscribe(
       response => {
-        this.files = response;
+        if (response.success) {
+          this.files = response.files;
+          this.errorMessage = null;
+        } else {
+          this.errorMessage = response.message || 'Could not retrieve file list';
+        }
       },
       error => {
-        console.error('Error fetching file list:', error);
+        this.errorMessage = `Error fetching file list: ${error.message}`;
+        console.error('Error details:', error);
       }
     );
   }
