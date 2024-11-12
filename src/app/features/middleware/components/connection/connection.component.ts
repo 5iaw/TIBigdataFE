@@ -17,6 +17,7 @@ export class ConnectionComponent implements OnInit {
 
   ngOnInit(): void {
     let url = this.router.url.split("/");
+    console.log('URL: ', url);
     this.currentMenu = url[url.length - 1];
     this.setTitle(this.currentMenu);
   }
@@ -54,22 +55,22 @@ export class ConnectionComponent implements OnInit {
    */
   setTitle(currentAddress: string) {
     if (currentAddress === "fileupload") this.title = 'File Upload';
-    if (currentAddress === "es") this.title = "Search Menu";
+    if (currentAddress === "search") this.title = "Search Menu";
     if (currentAddress === "analysis") this.title = "Analysis Menu";
   }
 
   toFileUpload() {
-    this.router.navigateByUrl("/connection/fileupload");
+    this.router.navigateByUrl("/middleware/fileupload");
     this.ngOnInit();
   }
 
   toElasticSearch() {
-    this.router.navigateByUrl("/connection/search");
+    this.router.navigateByUrl("/middleware/search");
     this.ngOnInit();
   }
 
   toAnalysis() {
-    this.router.navigateByUrl("/connection/analysis");
+    this.router.navigateByUrl("/middleware/analysis");
     this.ngOnInit();
   }
 

@@ -30,54 +30,55 @@
     <div class="job-section">
         <h3>K-Means Analysis</h3>
         <label for="k_value">K-Value: </label>
-        <input type="text" id="k_value" placeholder="Enter K-Value">
-        <button onclick="submitWithArgs('/submit_kmeans', 'k_value')">Submit K-Means Job</button>
+        <input type="text" [(ngModel)]="k_value" placeholder="Enter K-Value">
+        <button (click)="submitKMeans()">Submit K-Means Job</button>
     </div>
 
     <!-- TF-IDF Analysis -->
     <div class="job-section">
         <h3>TF-IDF Analysis</h3>
         <label for="tfidf_param">TF-IDF Parameter: </label>
-        <input type="text" id="tfidf_param" placeholder="Enter TF-IDF Parameter">
-        <button onclick="submitWithArgs('/submit_tfidf', 'tfidf_param')">Submit TF-IDF Job</button>
+        <input type="text" [(ngModel)]="tfidf_value" placeholder="Enter TF-IDF Parameter">
+        <button (click)="submitTFIDF()">Submit TF-IDF Job</button>
     </div>
 
     <!-- Word2Vec Analysis -->
     <div class="job-section">
         <h3>Word2Vec Analysis</h3>
         <label for="w2v_param">Word2Vec Parameter: </label>
-        <input type="text" id="w2v_param" placeholder="Enter Word2Vec Parameter">
-        <button onclick="submitWithArgs('/submit_w2v', 'w2v_param')">Submit Word2Vec Job</button>
+        <input type="text" [(ngModel)]="w2v_value" placeholder="Enter Word2Vec Parameter">
+        <button (click)="submitW2V()">Submit Word2Vec Job</button>
     </div>
 
     <!-- Topic LDA Analysis -->
     <div class="job-section">
         <h3>Topic LDA Analysis</h3>
         <label for="lda_param">Number of Topics: </label>
-        <input type="text" id="lda_param" placeholder="Enter number of topics">
-        <button onclick="submitWithArgs('/submit_lda', 'lda_param')">Submit Topic LDA Analysis</button>
+        <input type="text" [(ngModel)]="lda_value" placeholder="Enter number of topics">
+        <button (click)="submitLDA()">Submit Topic LDA Analysis</button>
     </div>
 
     <!-- Semantic Network Analysis -->
     <div class="job-section">
         <h3>Semantic Network Analysis</h3>
         <label for="sma_param">SMA Parameter: </label>
-        <input type="text" id="sma_wordsnum" placeholder="Enter number of words">
+        <input type="text" [(ngModel)]="sma_wordsnum" placeholder="Enter number of words">
         <label for="sma_ls">Link Strength: </label>
-        <input type="text" id="sma_ls" placeholder="Enter SMA link strength (%)">
-        <button onclick="submitWithArgs('/submit_sma', 'sma_wordsnum', 'sma_ls')">Submit Semantic Network Analysis</button>
+        <input type="text" [(ngModel)]="sma_ls" placeholder="Enter SMA link strength (%)">
+        <button (click)="submitSMA()">Submit Semantic Network Analysis</button>
     </div>
+    
     
     <!-- N-Grams Analysis -->
     <div class="job-section">
         <h3>N-Grams Analysis</h3>
         <label for="ngrams_wordsnum">N-Grams Word Number: </label>
-        <input type="text" id="ngrams_wordsnum" placeholder="Enter number of words">
+        <input type="text" [(ngModel)]="ngrams_value" placeholder="Enter number of words">
         <label for="ngrams_param">N Parameter: </label>
-        <input type="text" id="ngrams_param" placeholder="Enter N-Grams N Parameter">
+        <input type="text" [(ngModel)]="ngrams_param" placeholder="Enter N-Grams N Parameter">
         <label for="ngrams_ls">Link Strength: </label>
-        <input type="text" id="ngrams_ls" placeholder="Enter N-Grams link strength (%)">
-        <button onclick="submitWithArgs('/submit_ngrams', 'ngrams_wordsnum', 'ngrams_param', 'ngrams_ls')">Submit N-Grams Analysis</button>
+        <input type="text" [(ngModel)]="ngrams_ls" placeholder="Enter N-Grams link strength (%)">
+        <button (click)="submitNgrams()">Submit N-Grams Analysis</button>
     </div>
 
     <!-- Hierarchical Clustering Analysis -->

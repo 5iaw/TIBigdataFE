@@ -9,11 +9,13 @@ import {TranslateModule} from '@ngx-translate/core';
 
 import { FormsModule } from '@angular/forms';  // Import FormsModule
 import { HttpClientModule } from '@angular/common/http';  // Import HttpClientModule
+import { ElasticSearchComponent } from "./components/elasticsearch/elasticsearch.component";
 
 @NgModule({
   declarations: [
     ConnectionComponent,
-    AnalysisComponent
+    AnalysisComponent,
+    ElasticSearchComponent
   ],
     imports: [
       CommonModule, 
