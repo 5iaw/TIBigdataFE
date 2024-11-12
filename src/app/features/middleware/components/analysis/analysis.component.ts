@@ -1,52 +1,43 @@
-import { assertPlatform, Component, OnInit } from '@angular/core';
+import { assertPlatform, Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 // import { HttpClient } from '@angular/common/http';
 
-import { interval } from 'rxjs';
-import { concatMap, takeWhile, switchMap, delay } from 'rxjs/operators';
-import { Observable } from 'rxjs';
-import { HttpHeaders } from '@angular/common/http';
-import * as d3 from 'd3';
+import { interval } from "rxjs";
+import { concatMap, takeWhile, switchMap, delay } from "rxjs/operators";
+import { Observable } from "rxjs";
+import { HttpHeaders } from "@angular/common/http";
+import * as d3 from "d3";
 import { Tooltip } from "chart.js";
 import * as lda from "./ldavis.v3.0.0.js";
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from "@angular/common/http";
 
 @Component({
-  selector: 'app-analysis',
-  templateUrl: './analysis.component.html',
-  styleUrls: ['../../middleware-style.less'],
+  selector: "app-analysis",
+  templateUrl: "./analysis.component.html",
+  styleUrls: ["../../middleware-style.less"],
 })
 export class AnalysisComponent implements OnInit {
-  displayValue: string = '';
-  k_value: string='';
-  w2v_value: string='';
-  tfidf_value: string='';
-  lda_value: string='';
-  sma_wordsnum: string='';
-  sma_ls: string='';
-  ngrams_value: string='';
-  ngrams_ls: string='';
-  ngrams_param:string='';
-<<<<<<< HEAD
-  activity: string='';
+  displayValue: string = "";
+  k_value: string = "";
+  w2v_value: string = "";
+  tfidf_value: string = "";
+  lda_value: string = "";
+  sma_wordsnum: string = "";
+  sma_ls: string = "";
+  ngrams_value: string = "";
+  ngrams_ls: string = "";
+  ngrams_param: string = "";
+  activity: string = "";
   analysisedData: any;
   output_path: string;
-
-  private middlewareUrl = 'http://localhost:10000/spark'; 
-  
-    constructor(private http: HttpClient) { }
-  
-    jobId: string | null = null;
-=======
   jobId: string | null = null;
-  private middlewareUrl = 'http://localhost:10000/spark';
 
-  constructor(private http: HttpClient) { }
->>>>>>> a37d7de55f643c99b3355f7589c77c495f825bcc
-  jobStatus: string = 'Waiting for job to start...';
+  private middlewareUrl = "http://localhost:10000/spark";
+  constructor(private http: HttpClient) {}
+  jobStatus: string = "Waiting for job to start...";
   isJobCompleted: boolean = false;
-  connectionStatus: string = 'Checking connection...';
-  results: string | null =  null;
+  connectionStatus: string = "Checking connection...";
+  results: string | null = null;
 
   ngOnInit(): void {
     this.testConnection(); // Check connection to middleware on initialization
@@ -56,313 +47,329 @@ export class AnalysisComponent implements OnInit {
     const testUrl = `${this.middlewareUrl}/test-connection`;
     this.http.get(testUrl).subscribe(
       () => {
-        console.log('Connection to middleware successful');
-        this.connectionStatus = 'Connected to middleware';
+        console.log("Connection to middleware successful");
+        this.connectionStatus = "Connected to middleware";
       },
       (error) => {
-        console.error('Unable to connect to middleware:', error);
-        this.connectionStatus = 'Failed to connect to middleware';
-      }
+        console.error("Unable to connect to middleware:", error);
+        this.connectionStatus = "Failed to connect to middleware";
+      },
     );
   }
 
+  //   private initialInterval: number = 30000; // 30 seconds for the first poll
+  //   private subsequentInterval: number = 3000; // 3 seconds for subsequent polls
+  //   private currentInterval: number = this.initialInterval; // Start with the initial interval
 
-//   private initialInterval: number = 30000; // 30 seconds for the first poll
-//   private subsequentInterval: number = 3000; // 3 seconds for subsequent polls
-//   private currentInterval: number = this.initialInterval; // Start with the initial interval
+  //   submitWordCount(displayValue: string) {
+  //     const payload = { display_value: displayValue };
 
-//   submitWordCount(displayValue: string) {
-//     const payload = { display_value: displayValue };
+  //     // Step 1: Submit the job and get the job ID
+  //     this.http.post<{ job_id: string }>('{this.apiUrl}/submit_wordcount', payload)
+  //       .subscribe(response => {
+  //         this.jobId = response.job_id;
+  //         this.jobStatus = 'Job submitted, waiting for completion...';
+  //         this.pollJobStatus();  // Start polling for job status
+  //       });
+  //   }
 
-//     // Step 1: Submit the job and get the job ID
-//     this.http.post<{ job_id: string }>('{this.apiUrl}/submit_wordcount', payload)
-//       .subscribe(response => {
-//         this.jobId = response.job_id;
-//         this.jobStatus = 'Job submitted, waiting for completion...';
-//         this.pollJobStatus();  // Start polling for job status
-//       });
-//   }
+  submitWordCount(): void {
+    if (this.displayValue && this.displayValue.trim() !== "") {
+      console.log("Submitting WordCount job with value:", this.displayValue);
 
-submitWordCount(): void {
-    if (this.displayValue && this.displayValue.trim() !== '') {
-      console.log('Submitting WordCount job with value:', this.displayValue);
-
-      console.log("Posting to ",  this.middlewareUrl + "/submit_wordcount");
+      console.log("Posting to ", this.middlewareUrl + "/submit_wordcount");
       // Prepare payload to send to backend
       const payload = { display_value: this.displayValue };
 
-      this.activity = 'count';
+      this.activity = "count";
       // Send the job submission request
-      this.http.post(`${this.middlewareUrl}/submit_wordcount`, payload).subscribe(
-        (response: any) => {
-          console.log('Job submitted successfully:', response);
-          this.output_path = response.output_path;
-          this.jobId = response.id;  // Assuming the response contains the job ID
-          this.jobStatus = 'Job submitted, waiting for completion...';
+      this.http
+        .post(`${this.middlewareUrl}/submit_wordcount`, payload)
+        .subscribe(
+          (response: any) => {
+            console.log("Job submitted successfully:", response);
+            this.output_path = response.output_path;
+            this.jobId = response.id; // Assuming the response contains the job ID
+            this.jobStatus = "Job submitted, waiting for completion...";
 
-          // Now, periodically check the job status
-          this.pollJobStatus();
-        },
-        (error) => {
-          console.error('Error submitting job:', error);
-          this.jobStatus = 'Failed to submit the job.';
-        }
-      );
+            // Now, periodically check the job status
+            this.pollJobStatus();
+          },
+          (error) => {
+            console.error("Error submitting job:", error);
+            this.jobStatus = "Failed to submit the job.";
+          },
+        );
     } else {
-      console.log('Please enter a valid display value.');
-      this.jobStatus = 'Please enter a valid display value.';
+      console.log("Please enter a valid display value.");
+      this.jobStatus = "Please enter a valid display value.";
     }
   }
 
   submitKMeans(): void {
-    if (this.k_value && this.k_value.trim() !== '') {
-      console.log('Submitting K-Means job with value:', this.k_value);
+    if (this.k_value && this.k_value.trim() !== "") {
+      console.log("Submitting K-Means job with value:", this.k_value);
 
-    console.log("Posting to ",  this.middlewareUrl + "/submit_kmeans");
+      console.log("Posting to ", this.middlewareUrl + "/submit_kmeans");
       // Prepare payload to send to backend
       const payload = { k_value: this.k_value };
 
       // Send the job submission request
       this.http.post(`${this.middlewareUrl}/submit_kmeans`, payload).subscribe(
         (response: any) => {
-          console.log('Job submitted successfully:', response);
-          
-          this.jobId = response.id;  // Assuming the response contains the job ID
-          this.jobStatus = 'Job submitted, waiting for completion...';
+          console.log("Job submitted successfully:", response);
+
+          this.jobId = response.id; // Assuming the response contains the job ID
+          this.jobStatus = "Job submitted, waiting for completion...";
 
           // Now, periodically check the job status
           this.pollJobStatus();
         },
         (error) => {
-          console.error('Error submitting job:', error);
-          this.jobStatus = 'Failed to submit the job.';
-        }
+          console.error("Error submitting job:", error);
+          this.jobStatus = "Failed to submit the job.";
+        },
       );
     } else {
-      console.log('Please enter a valid k value.');
-      this.jobStatus = 'Please enter a valid k value.';
+      console.log("Please enter a valid k value.");
+      this.jobStatus = "Please enter a valid k value.";
     }
   }
 
   submitTFIDF(): void {
-    if (this.tfidf_value && this.tfidf_value.trim() !== '') {
-      console.log('Submitting TFIDF job with value:', this.tfidf_value);
+    if (this.tfidf_value && this.tfidf_value.trim() !== "") {
+      console.log("Submitting TFIDF job with value:", this.tfidf_value);
 
-    console.log("Posting to ",  this.middlewareUrl + "/submit_tfidf");
+      console.log("Posting to ", this.middlewareUrl + "/submit_tfidf");
       // Prepare payload to send to backend
       const payload = { tfidf_param: this.tfidf_value };
 
       // Send the job submission request
       this.http.post(`${this.middlewareUrl}/submit_tfidf`, payload).subscribe(
         (response: any) => {
-          console.log('Job submitted successfully:', response);
-          this.jobId = response.id;  // Assuming the response contains the job ID
-          this.jobStatus = 'Job submitted, waiting for completion...';
+          console.log("Job submitted successfully:", response);
+          this.jobId = response.id; // Assuming the response contains the job ID
+          this.jobStatus = "Job submitted, waiting for completion...";
 
           // Now, periodically check the job status
           this.pollJobStatus();
         },
         (error) => {
-          console.error('Error submitting job:', error);
-          this.jobStatus = 'Failed to submit the job.';
-        }
+          console.error("Error submitting job:", error);
+          this.jobStatus = "Failed to submit the job.";
+        },
       );
     } else {
-      console.log('Please enter a valid value.');
-      this.jobStatus = 'Please enter a valid value.';
+      console.log("Please enter a valid value.");
+      this.jobStatus = "Please enter a valid value.";
     }
   }
 
   submitW2V(): void {
-    if (this.w2v_value && this.w2v_value.trim() !== '') {
-      console.log('Submitting Word2Vec job with value:', this.w2v_value);
+    if (this.w2v_value && this.w2v_value.trim() !== "") {
+      console.log("Submitting Word2Vec job with value:", this.w2v_value);
 
-    console.log("Posting to ",  this.middlewareUrl + "/submit_w2v");
+      console.log("Posting to ", this.middlewareUrl + "/submit_w2v");
       // Prepare payload to send to backend
       const payload = { w2v_param: this.w2v_value };
 
       // Send the job submission request
       this.http.post(`${this.middlewareUrl}/submit_w2v`, payload).subscribe(
         (response: any) => {
-          console.log('Job submitted successfully:', response);
-          this.jobId = response.id;  // Assuming the response contains the job ID
-          this.jobStatus = 'Job submitted, waiting for completion...';
+          console.log("Job submitted successfully:", response);
+          this.jobId = response.id; // Assuming the response contains the job ID
+          this.jobStatus = "Job submitted, waiting for completion...";
 
           // Now, periodically check the job status
           this.pollJobStatus();
         },
         (error) => {
-          console.error('Error submitting job:', error);
-          this.jobStatus = 'Failed to submit the job.';
-        }
+          console.error("Error submitting job:", error);
+          this.jobStatus = "Failed to submit the job.";
+        },
       );
     } else {
-      console.log('Please enter a valid value.');
-      this.jobStatus = 'Please enter a valid value.';
+      console.log("Please enter a valid value.");
+      this.jobStatus = "Please enter a valid value.";
     }
   }
 
   submitLDA(): void {
-    if (this.lda_value && this.lda_value.trim() !== '') {
-      console.log('Submitting Topic LDA job with value:', this.lda_value);
+    if (this.lda_value && this.lda_value.trim() !== "") {
+      console.log("Submitting Topic LDA job with value:", this.lda_value);
 
-    console.log("Posting to ",  this.middlewareUrl + "/submit_lda");
+      console.log("Posting to ", this.middlewareUrl + "/submit_lda");
       // Prepare payload to send to backend
       const payload = { lda_param: this.lda_value };
 
       // Send the job submission request
       this.http.post(`${this.middlewareUrl}/submit_lda`, payload).subscribe(
         (response: any) => {
-          console.log('Job submitted successfully:', response);
-          this.jobId = response.id;  // Assuming the response contains the job ID
-          this.jobStatus = 'Job submitted, waiting for completion...';
+          console.log("Job submitted successfully:", response);
+          this.jobId = response.id; // Assuming the response contains the job ID
+          this.jobStatus = "Job submitted, waiting for completion...";
 
           // Now, periodically check the job status
           this.pollJobStatus();
         },
         (error) => {
-          console.error('Error submitting job:', error);
-          this.jobStatus = 'Failed to submit the job.';
-        }
+          console.error("Error submitting job:", error);
+          this.jobStatus = "Failed to submit the job.";
+        },
       );
     } else {
-      console.log('Please enter a valid value.');
-      this.jobStatus = 'Please enter a valid value.';
+      console.log("Please enter a valid value.");
+      this.jobStatus = "Please enter a valid value.";
     }
   }
 
-  submitSMA(): void {  // skipped
+  submitSMA(): void {
+    // skipped
     if (this.sma_wordsnum && this.sma_ls) {
-        console.log('Submitting Semantic Network Analysis with params:', this.sma_wordsnum, this.sma_ls);
-
-        // Prepare payload with both parameters
-        const payload = { optionList: this.sma_wordsnum, linkStrength: this.sma_ls };
-
-        // Send the job submission request
-        this.http.post(`${this.middlewareUrl}/submit_sma`, payload).subscribe(
-            (response: any) => {
-                console.log('Job submitted successfully:', response);
-                this.jobId = response.id;  // Assuming the response contains the job ID
-                this.jobStatus = 'Job submitted, waiting for completion...';
-
-                // Poll job status
-                this.pollJobStatus();
-            },
-            (error) => {
-                console.error('Error submitting job:', error);
-                this.jobStatus = 'Failed to submit the job.';
-            }
-        );
-    } else {
-        console.log('Please enter valid parameters.');
-        this.jobStatus = 'Please enter valid parameters.';
-    }
-}
-
-submitNgrams(): void {
-  if (this.ngrams_value && this.ngrams_ls && this.ngrams_param) {
-      console.log('Submitting Semantic Network Analysis with params:', this.ngrams_ls, this.ngrams_param, this.ngrams_ls);
+      console.log(
+        "Submitting Semantic Network Analysis with params:",
+        this.sma_wordsnum,
+        this.sma_ls,
+      );
 
       // Prepare payload with both parameters
-      const payload = { optionList: this.ngrams_value, n: this.ngrams_param, linkStrength: this.ngrams_ls };
+      const payload = {
+        optionList: this.sma_wordsnum,
+        linkStrength: this.sma_ls,
+      };
+
+      // Send the job submission request
+      this.http.post(`${this.middlewareUrl}/submit_sma`, payload).subscribe(
+        (response: any) => {
+          console.log("Job submitted successfully:", response);
+          this.jobId = response.id; // Assuming the response contains the job ID
+          this.jobStatus = "Job submitted, waiting for completion...";
+
+          // Poll job status
+          this.pollJobStatus();
+        },
+        (error) => {
+          console.error("Error submitting job:", error);
+          this.jobStatus = "Failed to submit the job.";
+        },
+      );
+    } else {
+      console.log("Please enter valid parameters.");
+      this.jobStatus = "Please enter valid parameters.";
+    }
+  }
+
+  submitNgrams(): void {
+    if (this.ngrams_value && this.ngrams_ls && this.ngrams_param) {
+      console.log(
+        "Submitting Semantic Network Analysis with params:",
+        this.ngrams_ls,
+        this.ngrams_param,
+        this.ngrams_ls,
+      );
+
+      // Prepare payload with both parameters
+      const payload = {
+        optionList: this.ngrams_value,
+        n: this.ngrams_param,
+        linkStrength: this.ngrams_ls,
+      };
 
       // Send the job submission request
       this.http.post(`${this.middlewareUrl}/submit_ngrams`, payload).subscribe(
-          (response: any) => {
-              console.log('Job submitted successfully:', response);
-              this.jobId = response.id;  // Assuming the response contains the job ID
-              this.jobStatus = 'Job submitted, waiting for completion...';
+        (response: any) => {
+          console.log("Job submitted successfully:", response);
+          this.jobId = response.id; // Assuming the response contains the job ID
+          this.jobStatus = "Job submitted, waiting for completion...";
 
-              // Poll job status
-              this.pollJobStatus();
-          },
-          (error) => {
-              console.error('Error submitting job:', error);
-              this.jobStatus = 'Failed to submit the job.';
-          }
+          // Poll job status
+          this.pollJobStatus();
+        },
+        (error) => {
+          console.error("Error submitting job:", error);
+          this.jobStatus = "Failed to submit the job.";
+        },
       );
-  } else {
-      console.log('Please enter valid parameters.');
-      this.jobStatus = 'Please enter valid parameters.';
+    } else {
+      console.log("Please enter valid parameters.");
+      this.jobStatus = "Please enter valid parameters.";
+    }
   }
-}
 
-//   poll for 10s each
+  //   poll for 10s each
   pollJobStatus(): void {
-    interval(3000) 
+    interval(3000)
       .pipe(
         takeWhile(() => !this.isJobCompleted), // Stop polling once the job is completed
-        switchMap(() => this.getJobStatus(Number(this.jobId))) // Fetch job status from Flask
+        switchMap(() => this.getJobStatus(Number(this.jobId))), // Fetch job status from Flask
       )
       .subscribe(
-        status => {
-          if (status.state === 'success') {
-            this.jobStatus = 'Job completed successfully!';
+        (status) => {
+          if (status.state === "success") {
+            this.jobStatus = "Job completed successfully!";
             this.isJobCompleted = true;
             console.log(this.getAnalysisResult());
-
-          } else if (status.state === 'failed') {
-            this.jobStatus = 'Job failed.';
+          } else if (status.state === "failed") {
+            this.jobStatus = "Job failed.";
             this.isJobCompleted = true;
           } else {
-            this.jobStatus = 'Job is still running...';
+            this.jobStatus = "Job is still running...";
           }
-          console.log('Job status:  ', this.jobStatus);
+          console.log("Job status:  ", this.jobStatus);
         },
-        error => {
-          console.error('Error fetching job status:', error);
-        }
+        (error) => {
+          console.error("Error fetching job status:", error);
+        },
       );
   }
 
+  // pollJobStatus(): void {
+  //     let firstPollDone = false;
 
-// pollJobStatus(): void {
-//     let firstPollDone = false;
+  //     interval(this.initialInterval) // Start with the initial 30 seconds interval
+  //       .pipe(
+  //         takeWhile(() => !this.isJobCompleted), // Stop polling once the job is completed
+  //         switchMap(() => this.getJobStatus(Number(this.jobId))), // Fetch job status from Flask
+  //         concatMap((status) => {
+  //           // Log the job status response to check its structure
+  //           console.log('Job Status Response:', status);
 
-//     interval(this.initialInterval) // Start with the initial 30 seconds interval
-//       .pipe(
-//         takeWhile(() => !this.isJobCompleted), // Stop polling once the job is completed
-//         switchMap(() => this.getJobStatus(Number(this.jobId))), // Fetch job status from Flask
-//         concatMap((status) => {
-//           // Log the job status response to check its structure
-//           console.log('Job Status Response:', status);
-
-//           if (status.state === 'success' || status.state === 'failed') {
-//             // If job is complete or failed, stop polling
-//             this.isJobCompleted = true;
-//             this.jobStatus = status.state === 'success' ? 'Job completed successfully!' : 'Job failed.';
-//             return new Observable<void>(); // End the stream when the job completes
-//           } else {
-//             // If job is still running, check if the first poll is done
-//             if (!firstPollDone) {
-//               firstPollDone = true;
-//               // After the first poll, switch to 3-second polling interval
-//               return interval(this.subsequentInterval).pipe(
-//                 switchMap(() => this.getJobStatus(Number(this.jobId))) // Continue checking the job status
-//               );
-//             } else {
-//               return interval(this.subsequentInterval).pipe(
-//                 switchMap(() => this.getJobStatus(Number(this.jobId))) // Continue checking with 3 seconds interval
-//               );
-//             }
-//           }
-//         })
-//       )
-//       .subscribe(
-//         status => {
-//           if (this.isJobCompleted) {
-//             // Ensure job status is updated correctly
-//             console.log('Final Job Status: ', this.jobStatus);
-//           } else {
-//             this.jobStatus = 'Job is still running...';
-//             console.log('Job status: ', this.jobStatus);
-//           }
-//         },
-//         error => {
-//           console.error('Error fetching job status:', error);
-//         }
-//       );
-//   }
+  //           if (status.state === 'success' || status.state === 'failed') {
+  //             // If job is complete or failed, stop polling
+  //             this.isJobCompleted = true;
+  //             this.jobStatus = status.state === 'success' ? 'Job completed successfully!' : 'Job failed.';
+  //             return new Observable<void>(); // End the stream when the job completes
+  //           } else {
+  //             // If job is still running, check if the first poll is done
+  //             if (!firstPollDone) {
+  //               firstPollDone = true;
+  //               // After the first poll, switch to 3-second polling interval
+  //               return interval(this.subsequentInterval).pipe(
+  //                 switchMap(() => this.getJobStatus(Number(this.jobId))) // Continue checking the job status
+  //               );
+  //             } else {
+  //               return interval(this.subsequentInterval).pipe(
+  //                 switchMap(() => this.getJobStatus(Number(this.jobId))) // Continue checking with 3 seconds interval
+  //               );
+  //             }
+  //           }
+  //         })
+  //       )
+  //       .subscribe(
+  //         status => {
+  //           if (this.isJobCompleted) {
+  //             // Ensure job status is updated correctly
+  //             console.log('Final Job Status: ', this.jobStatus);
+  //           } else {
+  //             this.jobStatus = 'Job is still running...';
+  //             console.log('Job status: ', this.jobStatus);
+  //           }
+  //         },
+  //         error => {
+  //           console.error('Error fetching job status:', error);
+  //         }
+  //       );
+  //   }
 
   // Remember to check jobId
   getJobStatus(jobId: number) {
@@ -372,22 +379,20 @@ submitNgrams(): void {
   }
 
   getAnalysisResult() {
-    const url = `${this.middlewareUrl}/read_file`; 
+    const url = `${this.middlewareUrl}/read_file`;
     console.log("Getting results from ", url);
-    
+
     // Send output_path in the body as JSON
     this.http.get<{ result: string }>(url).subscribe(
       (response) => {
-        console.log('Analysis result:', response);
+        console.log("Analysis result:", response);
         this.analysisedData = response;
       },
       (error) => {
-        console.error('Error fetching analysis result:', error);
-      }
+        console.error("Error fetching analysis result:", error);
+      },
     );
   }
-  
-
 
   //   if(this.activity=='count'|| this.activity=='tfidf'){
   //     this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
@@ -417,7 +422,7 @@ submitNgrams(): void {
   //   alert("분석 완료되었습니다.");
   //   // this.closeLoadingWithMask();
   // }
-  
+
   // drawTable(analType:string, data_str:string){
   //   let data:any = JSON.parse(data_str);
 
@@ -644,7 +649,6 @@ submitNgrams(): void {
   //   let  width = 750 - margin.left - margin.right;
   //   let height = 750 - margin.top - margin.bottom;
 
-
   //   function zoom(svg) {
   //     const extent : [[number,number],[number,number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
 
@@ -660,7 +664,6 @@ submitNgrams(): void {
   //       svg.selectAll(".x-axis").call(xAxis);
   //     }
   //   }
-
 
   //   // Add X axis
   //   const x = d3.scaleLinear()
@@ -684,7 +687,6 @@ submitNgrams(): void {
   //       .attr("transform",
   //             "translate(" + margin.left + "," + margin.top + ")")
 
-
   //   const xAxis = g => g
   //   .attr("transform", `translate(0,${height})`)
   //   .call(d3.axisBottom(x).tickSizeOuter(0))
@@ -705,12 +707,10 @@ submitNgrams(): void {
   //     .call(yAxis)
   //   // .call(d3.axisLeft(y));
 
-
   //   // Color scale: give me a specie name, I return a color
   //   const color = d3.scaleSequential()
   //   .domain([0, d3.max(data, d => d.category)])
   //   .interpolator(d3.interpolateSinebow)
-
 
   //   // console.log(color('0'));
   //   // Highlight the specie that is hovered
@@ -756,7 +756,6 @@ submitNgrams(): void {
   //       .style("opacity", 1)
   //   }
 
-
   //   // Add dots
   //   svg.append('g')
   //   .selectAll("dot")
@@ -788,7 +787,6 @@ submitNgrams(): void {
   //   //   .attr("y",d=>y(d.y))
   //   //   .style("font-size", "10px")
 
-
   //   // Draw a tooltip
   //   const tooltip = d3.select("figure#scatter")
   //     .append("div")
@@ -800,7 +798,6 @@ submitNgrams(): void {
   //     .style("border-radius", "5px")
   //     .style("padding", "10px");
   // }
-
 
   // /**
   //  * @description draw a scatter chart for word-2-vec using the data using d3
@@ -822,7 +819,6 @@ submitNgrams(): void {
   //     width = 750 - margin.left - margin.right,
   //     height = 750 - margin.top - margin.bottom;
 
-
   //   function zoom(svg) {
   //     const extent : [[number,number],[number,number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
 
@@ -838,7 +834,6 @@ submitNgrams(): void {
   //       svg.selectAll(".x-axis").call(xAxis);
   //     }
   //   }
-
 
   //   // Add X axis
   //   const x = d3.scaleLinear()
@@ -862,7 +857,6 @@ submitNgrams(): void {
   //       .attr("transform",
   //             "translate(" + margin.left + "," + margin.top + ")")
 
-
   //   const xAxis = g => g
   //   .attr("transform", `translate(0,${height})`)
   //   .call(d3.axisBottom(x).tickSizeOuter(0))
@@ -882,7 +876,6 @@ submitNgrams(): void {
   //   svg.append("g")
   //     .call(yAxis)
   //   // .call(d3.axisLeft(y));
-
 
   //   // console.log(color('0'));
   //   // Highlight the specie that is hovered
@@ -926,7 +919,6 @@ submitNgrams(): void {
   //       .style("opacity", 1)
   //   }
 
-
   //   // Add dots
   //   svg.append('g')
   //   .selectAll("dot")
@@ -958,7 +950,6 @@ submitNgrams(): void {
   //     .attr("y",d=>(y(d.y)-3))
   //     .style("font-size", "10px")
 
-
   //   // Draw a tooltip
   //   const tooltip = d3.select("figure#scatter")
   //     .append("div")
@@ -970,7 +961,6 @@ submitNgrams(): void {
   //     .style("border-radius", "5px")
   //     .style("padding", "10px");
   // }
-
 
   // // /**
   // //  * @description draw a network chart using the data using d3
@@ -1008,7 +998,6 @@ submitNgrams(): void {
   // //     .append("g")
   // //     .attr("transform",
   // //           "translate(" + margin.left + "," + margin.top + ")");
-
 
   // //   // Highlight the specie that is hovered
   // //   const highlight = function(e,d){
@@ -1074,7 +1063,6 @@ submitNgrams(): void {
   // //       .style("top", (e.pageY) + "px");
   // //     });
 
-      
   // //     const dataon = function(e,d){
   // //       console.log("mouse on",d);
   // //       svg
@@ -1094,8 +1082,6 @@ submitNgrams(): void {
   // //     // .text('사이중심성') //['사이중심성','근접중심성','빈도수','연결중심성','eigen value']
   // //     // .on("mouseover",dataon)
   // //     // .on("mouseout",dataoff);
-
-
 
   // //   // d3.select("svg")
   // //   svg.append("g")
@@ -1161,16 +1147,16 @@ submitNgrams(): void {
   // //       "count":number}>
   // // }
   // = JSON.parse(data_str);
-    
+
   // // normalize count
   // const normCount = d3.scaleLinear()
   //       .domain(d3.extent(data['nodes'], d=> +d['count']))
   //       .range([0,1])
-  
+
   // const normWeight = d3.scaleLinear()
   //       .domain(d3.extent(data['links'], d=> +d['weight']))
   //       .range([0,1])
-  
+
   // // test
   // // console.log(d3.extent(data['nodes'], d=>+d['count']));
   // // console.log(data['nodes'])
@@ -1178,27 +1164,27 @@ submitNgrams(): void {
   // // for(let d of data['nodes']){
   // //   console.log(d['count'],normCount(d['count']))
   // // }
-  
+
   // //Set margins and sizes
-	// var margin = {
-	// 	top: 20,
-	// 	bottom: 50,
-	// 	right: 30,
-	// 	left: 50
-	// };
-  
+  // var margin = {
+  // 	top: 20,
+  // 	bottom: 50,
+  // 	right: 30,
+  // 	left: 50
+  // };
+
   // //Extract data from dataset
   // var nodes = data.nodes,
   //   links = data.links;
-	// var width = 1000 - margin.left - margin.right;
-	// var height = 1000 - margin.top - margin.bottom;
-	// //Load Color Scale
-	// var color = d3.scaleSequential()
+  // var width = 1000 - margin.left - margin.right;
+  // var height = 1000 - margin.top - margin.bottom;
+  // //Load Color Scale
+  // var color = d3.scaleSequential()
   // .domain([0, nodes.length])
   // .interpolator(d3.interpolateSinebow)
 
-	// //Create an SVG element and append it to the DOM
-	// var svg = d3.select("figure#network")
+  // //Create an SVG element and append it to the DOM
+  // var svg = d3.select("figure#network")
   //   .append("svg")
   //   .attr("id","svgstart")
   //     .attr("viewBox", "0, 0," + (width + margin.left + margin.right)+","+  (height + margin.top + margin.bottom))
@@ -1211,20 +1197,19 @@ submitNgrams(): void {
 
   // var g = svg.append("g")
   //   .attr("transform","translate("+margin.left+","+margin.top+")")
-    
 
-	// //Load External Data
-	// // d3.json("got_social_graph.json", function(dataset){
-		
-	// 	//Create Force Layout
-	// 	var force = d3.forceSimulation(nodes)
+  // //Load External Data
+  // // d3.json("got_social_graph.json", function(dataset){
+
+  // 	//Create Force Layout
+  // 	var force = d3.forceSimulation(nodes)
   //     .force("link", d3.forceLink()                               // This force provides links between nodes
   //     .id(function(d) { return d['id']; })                     // This provide  the id of a node
   //     .links(data.links)                                    // and this the list of links
   //   )
   //   .force("charge", d3.forceManyBody().strength(-200))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
   //   .force("center", d3.forceCenter(width / 2, height / 2))
-    
+
   //   // Highlight the specie that is hovered
   //   const highlight = function(e,d){
   //     d3.selectAll(".dot")
@@ -1252,60 +1237,55 @@ submitNgrams(): void {
   //       .style("opacity", 1)
   //   }
 
-    
-
-	// 	//Add links to SVG
-	// 	var link = g.selectAll(".link")
-	// 				.data(links)
-	// 				.enter()
-	// 				.append("line")
+  // 	//Add links to SVG
+  // 	var link = g.selectAll(".link")
+  // 				.data(links)
+  // 				.enter()
+  // 				.append("line")
   //           .style("stroke-width", function(d){ return normWeight(d['weight'])*5 < 1 ? 1 :normWeight(d['weight'])*5 })
   //           .attr("class", "link")
   //           .style("stroke", "#C4DDFF")
-    
 
-	// 	//Add nodes to SVG
-	// 	var node = g.selectAll(".node")
-	// 				.data(nodes)
-	// 				.enter()
-	// 				.append("g")
-	// 				.attr("class", "node")
+  // 	//Add nodes to SVG
+  // 	var node = g.selectAll(".node")
+  // 				.data(nodes)
+  // 				.enter()
+  // 				.append("g")
+  // 				.attr("class", "node")
 
-	// 	//Add labels to each node
-	// 	var label = node.append("text")
-	// 					.attr("dx", 12)
-	// 					.attr("dy", "0.35em")
-	// 					.attr("font-size",function(d){ return normCount(d['count'])*12 < 1 ? 9: normCount(d['count'])*12 })
-	// 					.text(function(d){ return d['name']; });
+  // 	//Add labels to each node
+  // 	var label = node.append("text")
+  // 					.attr("dx", 12)
+  // 					.attr("dy", "0.35em")
+  // 					.attr("font-size",function(d){ return normCount(d['count'])*12 < 1 ? 9: normCount(d['count'])*12 })
+  // 					.text(function(d){ return d['name']; });
 
-	// 	//Add circles to each node
-	// 	var circle = node.append("circle")
+  // 	//Add circles to each node
+  // 	var circle = node.append("circle")
   //     .attr("r", function(d){ return normCount(d['count'])*7 < 1 ? 1: normCount(d['count'])*7 })
   //     .attr("fill", "#7FB5FF")
   //     // .attr("fill", function(d){ return color(d['id']); })
   //     .attr("class", function (d) { return "dot type" + d['id']} )
   //     .on("mouseover", highlight)
   //     .on("mouseout", doNotHighlight )
-      
 
-	// 	//This function will be executed for every tick of force layout 
-	// 	force.on("tick", function(){
-	// 		//Set X and Y of node
-	// 		node.attr("r", function(d){ return d['degree_cen']; })
-	// 			.attr("cx", function(d){ return d['x']; })
-	// 			.attr("cy", function(d){ return d['y']; });
-	// 		//Set X, Y of link
+  // 	//This function will be executed for every tick of force layout
+  // 	force.on("tick", function(){
+  // 		//Set X and Y of node
+  // 		node.attr("r", function(d){ return d['degree_cen']; })
+  // 			.attr("cx", function(d){ return d['x']; })
+  // 			.attr("cy", function(d){ return d['y']; });
+  // 		//Set X, Y of link
   //     link
   //       .attr("x1", function(d) { return d['source']['x']; })
   //       .attr("y1", function(d) { return d['source']['y']; })
   //       .attr("x2", function(d) { return d['target']['x']; })
   //       .attr("y2", function(d) { return d['target']['y']; });
-	// 		//Shift node a little
-	// 	    node.attr("transform", function(d) { return "translate(" + d['x'] + "," + d['y'] + ")"; });
+  // 		//Shift node a little
+  // 	    node.attr("transform", function(d) { return "translate(" + d['x'] + "," + d['y'] + ")"; });
   //   });
 
   //  }
-
 
   // /**
   //  * @description draw a tree chart using the data using d3
@@ -1447,7 +1427,6 @@ submitNgrams(): void {
   //     return svg.node();
   // }
 
-
   // drawTopicModeling(data_str:string){
   //   let data = JSON.parse(data_str);
 
@@ -1504,5 +1483,4 @@ submitNgrams(): void {
   //         // });
   //   // }
   // }
-
 }
