@@ -104,4 +104,10 @@ export class MiddlewareService {
       folder_name: folderName,
     });
   }
+  renameFileOrFolder(id: string, newName: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/rename`, {
+      id: id,
+      new_name: newName,
+    });
+  }
 }

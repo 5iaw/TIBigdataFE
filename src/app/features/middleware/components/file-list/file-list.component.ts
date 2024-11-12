@@ -92,7 +92,24 @@ export class FileListComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     });
   }
-
+  renameFile(file: FileSystemEntity): void {
+    const newName = prompt("Enter the new name:", file.name);
+    if (newName && newName !== file.name) {
+      this.middlewareService.renameFileOrFolder(file.id, newName).subscribe(
+        (response) => {
+          if (response.success) {
+            console.log("Renamed successfully.");
+            this.loadFolderContents();
+          } else {
+            console.error("Failed to rename:", response.message);
+          }
+        },
+        (error) => {
+          console.error("Error renaming file or folder:", error);
+        },
+      );
+    }
+  }
   createNewFolder(): void {
     if (this.newFolderName.trim()) {
       this.middlewareService
