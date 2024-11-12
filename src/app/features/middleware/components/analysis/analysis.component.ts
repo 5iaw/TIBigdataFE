@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { assertPlatform, Component, OnInit } from '@angular/core';
 import { Router } from "@angular/router";
 import { HttpClient } from '@angular/common/http';
 
@@ -14,7 +14,6 @@ import { HttpHeaders } from '@angular/common/http';
 })
 export class AnalysisComponent implements OnInit {
   displayValue: string = '';
-<<<<<<< HEAD
   k_value: string='';
   w2v_value: string='';
   tfidf_value: string='';
@@ -24,19 +23,10 @@ export class AnalysisComponent implements OnInit {
   ngrams_value: string='';
   ngrams_ls: string='';
   ngrams_param:string='';
-
-  private middlewareUrl = 'http://localhost:10000/spark'; 
-  
-    constructor(private http: HttpClient) { }
-  
-    jobId: string | null = null;
-=======
+  jobId: string | null = null;
   private middlewareUrl = 'http://localhost:10000/spark';
 
   constructor(private http: HttpClient) { }
-
-  jobId: string | null = null;
->>>>>>> 396e1b0f3184bfbbae0f6ca2604df82fd3914b53
   jobStatus: string = 'Waiting for job to start...';
   isJobCompleted: boolean = false;
   connectionStatus: string = 'Checking connection...';
@@ -251,7 +241,7 @@ submitWordCount(): void {
     }
 }
 
-submitNgrams(): void {  
+submitNgrams(): void {
   if (this.ngrams_value && this.ngrams_ls && this.ngrams_param) {
       console.log('Submitting Semantic Network Analysis with params:', this.ngrams_ls, this.ngrams_param, this.ngrams_ls);
 

@@ -1,7 +1,14 @@
-<div *ngIf="files.length === 0">No files found.</div>
-<ul *ngIf="files.length > 0">
-  <li *ngFor="let file of files">
-    <span>{{ file.name }}</span>
-    <button (click)="downloadFile(file.path)">Download</button>
-  </li>
-</ul>
+<div class="file-list">
+  <h2>Files in {{ currentPath }}</h2>
+
+  <ul>
+    <li *ngFor="let file of files">
+      <span>{{ file.name }}</span>
+
+      <!-- Download button for each file -->
+      <button *ngIf="file.type === 'file'" (click)="downloadFile(file.path, file.name)">
+        Download
+      </button>
+    </li>
+  </ul>
+</div>

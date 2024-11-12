@@ -1,45 +1,41 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Component } from '@angular/core';
+import { MiddlewareService } from '../../services/middleware.service';
 
 @Component({
   selector: 'app-upload',
   templateUrl: './upload.component.html',
   styleUrls: ['./upload.component.css']
 })
-export class UploadComponent implements OnInit {
-  file: File | null = null;
-  uploadStatus: string = '';
-  private backendUrl = 'http://localhost:10000';
+export class UploadComponent {
+  selectedFile: File | null = null;
+  customFileName: string = ''; // Custom name without spaces
+  owner = 'kubicuser';
+  currentPath = '/users/kubicuser';
 
-  constructor(private http: HttpClient) {}
-  ngOnInit(): void {
-
-  }
+  constructor(private middlewareService: MiddlewareService) {}
 
   onFileSelected(event: any): void {
-    this.file = event.target.files[0];
+    this.selectedFile = event.target.files[0];
   }
 
-  uploadFile(): void {
-    if (!this.file) {
-      alert('Please select a file first');
+  onUpload(): void {
+    // Ensure no spaces in custom file name
+    if (this.customFileName.includes(' ')) {
+      alert('File name should not contain spaces.');
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', this.file);
-    formData.append('path', window.location.pathname); // Current path as logical path
-    formData.append('owner', 'user_id'); // Replace with actual user_id
+    if (this.selectedFile) {
+      const fileName = this.customFileName || this.selectedFile.name; // Use custom name if provided
+      const file = new File([this.selectedFile], fileName); // Create a new File object with the custom name
 
-    this.http.post(`${this.backendUrl}/upload`, formData).subscribe(
-      () => {
-        this.uploadStatus = 'File uploaded successfully!';
-      },
-      (error) => {
-        this.uploadStatus = 'Failed to upload file';
-        console.error('Error:', error);
-      }
-    );
+      this.middlewareService.uploadFile(this.owner, this.currentPath, file).subscribe(response => {
+        if (response.success) {
+          alert('File uploaded successfully');
+          this.selectedFile = null;
+          this.customFileName = '';
+        }
+      });
+    }
   }
 }
