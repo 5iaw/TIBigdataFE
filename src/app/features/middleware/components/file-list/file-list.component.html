@@ -1,19 +1,44 @@
-<div class="file-list">
-  <h2>Files in {{ currentPath }}</h2>
-
-  <ul>
-    <li *ngFor="let file of files">
-      <span>{{ file.name }}</span>
-
-      <!-- Download button for each file -->
-      <button *ngIf="file.type === 'file'" (click)="downloadFile(file.path, file.name)">
-        Download
-      </button>
-
-    </li>
-  </ul>
-</div>
 <div>
-  <input type="text" [(ngModel)]="newFolderName" placeholder="Enter folder name" />
-  <button (click)="createNewFolder('kubicuser', '/users/kubicuser', newFolderName)">Create Folder</button>
+  <!-- Upload Component embedded in File List with custom file name -->
+  <app-upload
+    [currentPath]="currentPath"
+    (uploadSuccess)="loadFolderContents()"
+  ></app-upload>
+
+  <!-- Folder Navigation -->
+  <button (click)="navigateUp()">Go Up</button>
+
+  <!-- Display Files and Folders -->
+  <div *ngIf="fileList && fileList.length > 0; else noFiles">
+    <ul>
+      <li *ngFor="let file of fileList">
+        <!-- Folder Navigation: Clickable name if it's a folder -->
+        <span *ngIf="file.type === 'folder'" (click)="navigateToFolder(file)">
+          📁 {{ file.name }}
+        </span>
+
+        <!-- File Display with Download Option -->
+        <span *ngIf="file.type !== 'folder'">
+          📄 {{ file.name }}
+          <button (click)="downloadFile(file.path, file.name)">Download</button>
+        </span>
+
+        <!-- Delete Option for Both Files and Folders -->
+        <button (click)="deleteFile(file)">Delete</button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- No Files or Folders Available -->
+  <ng-template #noFiles>
+    <p>No files or folders available.</p>
+  </ng-template>
+
+  <!-- Create Folder Functionality -->
+  <input
+    type="text"
+    [(ngModel)]="newFolderName"
+    placeholder="New folder name"
+  />
+  <button (click)="createNewFolder()">Create Folder</button>
 </div>

@@ -1,23 +1,15 @@
-<div class="upload">
-  <h2>Upload File</h2>
-
-  <!-- Input for file selection -->
+<!-- upload.component.html -->
+<div>
   <input type="file" (change)="onFileSelected($event)" />
-
-  <!-- Input for custom file name -->
   <input
     type="text"
-    placeholder="Enter file name (no spaces)"
     [(ngModel)]="customFileName"
+    placeholder="Enter file name (without extension)"
   />
-
-  <!-- Warning message if there are spaces in the file name -->
-  <div *ngIf="customFileName.includes(' ')">
-    <small style="color: red;">File name should not contain spaces.</small>
-  </div>
-
-  <!-- Upload button -->
-  <button (click)="onUpload()" [disabled]="!selectedFile || customFileName.includes(' ')">
+  <button
+    (click)="uploadFile()"
+    [disabled]="!selectedFile || !customFileName.trim()"
+  >
     Upload
   </button>
 </div>
