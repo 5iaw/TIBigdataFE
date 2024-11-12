@@ -14,9 +14,6 @@ export class TransferComponent {
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Sends the Elasticsearch ID and owner to the backend for transfer to HDFS
-   */
   transferToHdfs(): void {
     // Check if both fields have values
     if (!this.esId || !this.owner) {
@@ -24,13 +21,11 @@ export class TransferComponent {
       return;
     }
 
-    // Create the payload to send to the backend
     const payload = {
       es_id: this.esId,
       owner: this.owner
     };
 
-    // Send the data to the backend using an HTTP POST request
     this.http.post<any>(this.apiUrl, payload).subscribe(
       (response) => {
         // Handle successful response
