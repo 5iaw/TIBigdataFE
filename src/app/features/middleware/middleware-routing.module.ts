@@ -4,6 +4,7 @@ import { ConnectionComponent } from "./components/connection/connection.componen
 import { AnalysisComponent } from "./components/analysis/analysis.component";
 import { ElasticSearchComponent } from "./components/elasticsearch/elasticsearch.component";
 
+import { SearchResultModule } from "../search-result/search-result.module";
 import { UploadComponent } from "./components/upload/upload.component"; // Include any additional components
 import { TransferComponent } from "./components/transfer/transfer.component"; // Example component
 import { FileListComponent } from './components/file-list/file-list.component';
