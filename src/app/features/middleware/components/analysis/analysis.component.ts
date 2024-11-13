@@ -10,6 +10,8 @@ import * as d3 from "d3";
 import { Tooltip } from "chart.js";
 import * as lda from "./ldavis.v3.0.0.js";
 import { HttpClient, HttpParams } from "@angular/common/http";
+import { UserProfile } from "src/app/core/models/user.model";
+import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
 
 @Component({
   selector: "app-analysis",
@@ -31,11 +33,22 @@ export class AnalysisComponent implements OnInit {
   analysisedData: any;
   output_path: string;
   jobId: string | null = null;
+  private currentUser: UserProfile;
 
   private middlewareUrl = "http://localhost:10000/spark";
-  constructor(private http: HttpClient) {}
+  constructor(
+    private authService: AuthenticationService,
+    private http: HttpClient) {
+      this.authService.getCurrentUserChange().subscribe((currentUser) => {
+        this.currentUser = currentUser;
+  
+      });
+    }
+
+
   jobStatus: string = "Waiting for job to start...";
   isJobCompleted: boolean = false;
+  loading: boolean = false;
   connectionStatus: string = "Checking connection...";
   results: string | null = null;
 
@@ -75,11 +88,14 @@ export class AnalysisComponent implements OnInit {
 
   submitWordCount(): void {
     if (this.displayValue && this.displayValue.trim() !== "") {
-      console.log("Submitting WordCount job with value:", this.displayValue);
 
       console.log("Posting to ", this.middlewareUrl + "/submit_wordcount");
       // Prepare payload to send to backend
-      const payload = { display_value: this.displayValue };
+      const payload = { userEmail: this.currentUser.email, display_value: this.displayValue };
+      console.log("Submitting WordCount job with value:", payload);
+
+      this.loading = true; // Start loading
+      // alert("Loading... Please wait."); // Display alert
 
       this.activity = "count";
       // Send the job submission request
@@ -98,6 +114,7 @@ export class AnalysisComponent implements OnInit {
           (error) => {
             console.error("Error submitting job:", error);
             this.jobStatus = "Failed to submit the job.";
+            this.loading = false;
           },
         );
     } else {
@@ -298,7 +315,7 @@ export class AnalysisComponent implements OnInit {
 
   //   poll for 10s each
   pollJobStatus(): void {
-    interval(3000)
+    const jobStatusSubscription = interval(3000)
       .pipe(
         takeWhile(() => !this.isJobCompleted), // Stop polling once the job is completed
         switchMap(() => this.getJobStatus(Number(this.jobId))), // Fetch job status from Flask
@@ -308,10 +325,14 @@ export class AnalysisComponent implements OnInit {
           if (status.state === "success") {
             this.jobStatus = "Job completed successfully!";
             this.isJobCompleted = true;
+            this.loading = false; // Stop loading
             console.log(this.getAnalysisResult());
+            jobStatusSubscription.unsubscribe();
           } else if (status.state === "failed") {
             this.jobStatus = "Job failed.";
             this.isJobCompleted = true;
+            this.loading = false; // Stop loading
+            jobStatusSubscription.unsubscribe();
           } else {
             this.jobStatus = "Job is still running...";
           }
@@ -322,54 +343,6 @@ export class AnalysisComponent implements OnInit {
         },
       );
   }
-
-  // pollJobStatus(): void {
-  //     let firstPollDone = false;
-
-  //     interval(this.initialInterval) // Start with the initial 30 seconds interval
-  //       .pipe(
-  //         takeWhile(() => !this.isJobCompleted), // Stop polling once the job is completed
-  //         switchMap(() => this.getJobStatus(Number(this.jobId))), // Fetch job status from Flask
-  //         concatMap((status) => {
-  //           // Log the job status response to check its structure
-  //           console.log('Job Status Response:', status);
-
-  //           if (status.state === 'success' || status.state === 'failed') {
-  //             // If job is complete or failed, stop polling
-  //             this.isJobCompleted = true;
-  //             this.jobStatus = status.state === 'success' ? 'Job completed successfully!' : 'Job failed.';
-  //             return new Observable<void>(); // End the stream when the job completes
-  //           } else {
-  //             // If job is still running, check if the first poll is done
-  //             if (!firstPollDone) {
-  //               firstPollDone = true;
-  //               // After the first poll, switch to 3-second polling interval
-  //               return interval(this.subsequentInterval).pipe(
-  //                 switchMap(() => this.getJobStatus(Number(this.jobId))) // Continue checking the job status
-  //               );
-  //             } else {
-  //               return interval(this.subsequentInterval).pipe(
-  //                 switchMap(() => this.getJobStatus(Number(this.jobId))) // Continue checking with 3 seconds interval
-  //               );
-  //             }
-  //           }
-  //         })
-  //       )
-  //       .subscribe(
-  //         status => {
-  //           if (this.isJobCompleted) {
-  //             // Ensure job status is updated correctly
-  //             console.log('Final Job Status: ', this.jobStatus);
-  //           } else {
-  //             this.jobStatus = 'Job is still running...';
-  //             console.log('Job status: ', this.jobStatus);
-  //           }
-  //         },
-  //         error => {
-  //           console.error('Error fetching job status:', error);
-  //         }
-  //       );
-  //   }
 
   // Remember to check jobId
   getJobStatus(jobId: number) {
@@ -409,6 +382,12 @@ getAnalysisResult() {
     (response) => {
       this.analysisedData = response;  // Adjust if file_content is directly returned
       console.log("Analysis result:", this.analysisedData);
+
+      this.displayValue = "";
+      this.output_path = "";
+      this.jobId = null;
+      this.isJobCompleted = false;
+      this.jobStatus = "";
 
       // Check if result_graph is defined before logging or using it
       if (this.analysisedData.result_graph) {

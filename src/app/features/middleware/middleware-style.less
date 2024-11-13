@@ -29,6 +29,16 @@
     margin-bottom: 10px;
   }
 
+// analysis menu
+  .job-section {
+    display: block;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.job-section label, .job-section input, .job-section button {
+    margin-right: 10px;
+}
+
   .search-container {
     display: flex;
     align-items: center;
@@ -99,4 +109,43 @@
 }
 .save-button:hover {
     background-color: #218838;
+}
+
+/* Full-screen overlay */
+.loading-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it overlays other elements */
+}
+
+/* Modal content styling */
+.loading-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.spinner {
+  margin-top: 10px;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
