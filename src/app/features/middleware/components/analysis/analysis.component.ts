@@ -378,26 +378,57 @@ export class AnalysisComponent implements OnInit {
     return this.http.get<{ state: string }>(url);
   }
 
-  getAnalysisResult() {
-    const url = `${this.middlewareUrl}/read_file`;
-    console.log("Getting results from ", url);
 
-    // Send output_path in the body as JSON
-    this.http.get<{ result: string }>(url).subscribe(
-      (response) => {
-        console.log("Analysis result:", response);
-        this.analysisedData = response;
-      },
-      (error) => {
-        console.error("Error fetching analysis result:", error);
-      },
-    );
-  }
+// getAnalysisResult() {
+//   const url = `${this.middlewareUrl}/read_file?output_path=${(this.output_path)}`;
+//   console.log("Getting results from ", url);
 
-  //   if(this.activity=='count'|| this.activity=='tfidf'){
-  //     this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
-  //     this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
-  //   }
+//   this.http.get<{ file_content: string }>(url).subscribe(
+//     (response) => {
+//       this.analysisedData = response;  // Adjust if file_content is directly returned
+//       console.log("Analysis result:", this.analysisedData);
+//       console.log("Result graph:", JSON.stringify(this.analysisedData.result_graph));
+//     },
+//     (error) => {
+//       console.error("Error fetching analysis result:", error);
+//     },
+//   );
+
+
+
+//     if(this.activity=='count'|| this.activity=='tfidf'){
+//       this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
+//       this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
+//       }}
+
+getAnalysisResult() {
+  const url = `${this.middlewareUrl}/read_file?output_path=${encodeURIComponent(this.output_path)}`;
+  console.log("Getting results from ", url);
+
+  this.http.get<{ file_content: string }>(url).subscribe(
+    (response) => {
+      this.analysisedData = response;  // Adjust if file_content is directly returned
+      console.log("Analysis result:", this.analysisedData);
+
+      // Check if result_graph is defined before logging or using it
+      if (this.analysisedData.result_graph) {
+          console.log("Result graph:", JSON.stringify(this.analysisedData.result_graph));
+
+          // Now that analysisedData is populated, call drawTable and drawBarChart
+          if (this.activity === 'count' || this.activity === 'tfidf') {
+              this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
+              this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
+          }
+      } else {
+          console.error("result_graph is undefined");
+      }
+    },
+    (error) => {
+      console.error("Error fetching analysis result:", error);
+    },
+  );
+}
+
   //   else if(this.activity=='network'){
   //     this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_table));
   //     this.drawNetworkChart(JSON.stringify(this.analysisedData.result_graph));
@@ -423,215 +454,215 @@ export class AnalysisComponent implements OnInit {
   //   // this.closeLoadingWithMask();
   // }
 
-  // drawTable(analType:string, data_str:string){
-  //   let data:any = JSON.parse(data_str);
+  drawTable(analType:string, data_str:string){
+    let data:any = JSON.parse(data_str);
 
-  //   const table = d3.select("figure#table")
-  //     .attr('class','result-pretable')
-  //     .append("table")
-  //     .attr('width','100%')
-  //     .attr('height','300px')
+    const table = d3.select("figure#table")
+      .attr('class','result-pretable')
+      .append("table")
+      .attr('width','100%')
+      .attr('height','300px')
 
-  //   if(analType=='count'||analType=='tfidf'){
-  //     const th = table.append("tr")
-  //     .style('padding','15px 0px')
-  //     .style('font-weight','500')
-  //     .style('text-align','center');
+    if(analType=='count'||analType=='tfidf'){
+      const th = table.append("tr")
+      .style('padding','15px 0px')
+      .style('font-weight','500')
+      .style('text-align','center');
 
-  //     th.append('th').text('No');
-  //     th.append('th').text('단어');
-  //     th.append('th').text('값');
+      th.append('th').text('No');
+      th.append('th').text('단어');
+      th.append('th').text('값');
 
-  //     const tbody = table.append("tbody")
-  //     .style('text-align','center');
+      const tbody = table.append("tbody")
+      .style('text-align','center');
 
-  //     for(let i=0;i<data.length;i++){
-  //       const tr = tbody.append("tr");
-  //       tr.append("td").text(i+1);
-  //       tr.append("td").text(data[i]['word']);
-  //       tr.append("td").text(data[i]['value']);
-  //     }
-  //   }
+      for(let i=0;i<data.length;i++){
+        const tr = tbody.append("tr");
+        tr.append("td").text(i+1);
+        tr.append("td").text(data[i]['word']);
+        tr.append("td").text(data[i]['value']);
+      }
+    }
 
-  //   else if(analType=='kmeans'){
-  //     const th = table.append("tr")
-  //     .style('padding','15px 0px')
-  //     .style('font-weight','500')
-  //     .style('text-align','center');
+    else if(analType=='kmeans'){
+      const th = table.append("tr")
+      .style('padding','15px 0px')
+      .style('font-weight','500')
+      .style('text-align','center');
 
-  //     th.append('th').text('category');
-  //     th.append('th').text('title');
-  //     // th.append('th').text('값');
+      th.append('th').text('category');
+      th.append('th').text('title');
+      // th.append('th').text('값');
 
-  //     const tbody = table.append("tbody")
-  //     .style('text-align','center');
+      const tbody = table.append("tbody")
+      .style('text-align','center');
 
-  //     let max=0;
-  //     for(let i=0;i<data.length;i++){
-  //       if(data[i]['category']>max)
-  //         max=data[i]['category'];
-  //     }
+      let max=0;
+      for(let i=0;i<data.length;i++){
+        if(data[i]['category']>max)
+          max=data[i]['category'];
+      }
 
-  //     for(let i=0;i<=max;i++){
-  //       const tr = tbody.append("tr");
-  //       tr.append("td").text(i+1);
-  //       const td=tr.append("td");
-  //       for(let j=0;j<data.length;j++){
-  //         if(data[j]['category']==i){
-  //           td.append("ul").text(data[j]['title']);
-  //         }
-  //       }
-  //       // tr.append("td").text(data[i]['value']);
-  //     }
-  //   }
+      for(let i=0;i<=max;i++){
+        const tr = tbody.append("tr");
+        tr.append("td").text(i+1);
+        const td=tr.append("td");
+        for(let j=0;j<data.length;j++){
+          if(data[j]['category']==i){
+            td.append("ul").text(data[j]['title']);
+          }
+        }
+        // tr.append("td").text(data[i]['value']);
+      }
+    }
 
-  //   else if(analType=='network'){
-  //     const th = table.append("tr")
-  //     .style('padding','15px 0px')
-  //     .style('font-weight','500')
-  //     .style('text-align','center');
+    else if(analType=='network'){
+      const th = table.append("tr")
+      .style('padding','15px 0px')
+      .style('font-weight','500')
+      .style('text-align','center');
 
-  //     th.append('th').attr('width','10%').text('index');
-  //     th.append('th').attr('width','18%').text('사이중심성');
-  //     th.append('th').attr('width','18%').text('근접중심성');
-  //     th.append('th').attr('width','18%').text('빈도수');
-  //     th.append('th').attr('width','18%').text('연결중심성');
-  //     th.append('th').attr('width','18%').text('eigenvector');
+      th.append('th').attr('width','10%').text('index');
+      th.append('th').attr('width','18%').text('사이중심성');
+      th.append('th').attr('width','18%').text('근접중심성');
+      th.append('th').attr('width','18%').text('빈도수');
+      th.append('th').attr('width','18%').text('연결중심성');
+      th.append('th').attr('width','18%').text('eigenvector');
 
-  //     // th.append('th').text('값');
+      // th.append('th').text('값');
 
-  //     console.log(data);
-  //     const tbody = table.append("tbody")
-  //     .style('text-align','center');
+      console.log(data);
+      const tbody = table.append("tbody")
+      .style('text-align','center');
 
-  //     for(let i=0;i<data['between_cen'].length;i++){
-  //       const tr = tbody.append("tr");
-  //       tr.append("td").text(i+1);
-  //       // tr.append("td").text(data['between_cen'][i]['word']+'/'+ Math.floor(data['between_cen'][i]['value']*1000)/1000);
-  //       // tr.append("td").text(data['closeness_cen'][i]['word']+'/'+ Math.floor(data['closeness_cen'][i]['value']*1000)/1000);
-  //       // tr.append("td").text(data['count'][i]['word']+'/'+ Math.floor(data['count'][i]['value']*1000)/1000);
-  //       // tr.append("td").text(data['degree_cen'][i]['word']+'/'+ Math.floor(data['degree_cen'][i]['value']*1000)/1000);
-  //       // tr.append("td").text(data['eigenvector_cen'][i]['word']+'/'+ Math.floor(data['eigenvector_cen'][i]['value']*1000)/1000);
+      for(let i=0;i<data['between_cen'].length;i++){
+        const tr = tbody.append("tr");
+        tr.append("td").text(i+1);
+        // tr.append("td").text(data['between_cen'][i]['word']+'/'+ Math.floor(data['between_cen'][i]['value']*1000)/1000);
+        // tr.append("td").text(data['closeness_cen'][i]['word']+'/'+ Math.floor(data['closeness_cen'][i]['value']*1000)/1000);
+        // tr.append("td").text(data['count'][i]['word']+'/'+ Math.floor(data['count'][i]['value']*1000)/1000);
+        // tr.append("td").text(data['degree_cen'][i]['word']+'/'+ Math.floor(data['degree_cen'][i]['value']*1000)/1000);
+        // tr.append("td").text(data['eigenvector_cen'][i]['word']+'/'+ Math.floor(data['eigenvector_cen'][i]['value']*1000)/1000);
 
-  //       tr.append("td").text(data['between_cen'][i]['word']+'/'+ data['between_cen'][i]['value'].toExponential(3));
-  //       tr.append("td").text(data['closeness_cen'][i]['word']+'/'+ data['closeness_cen'][i]['value'].toExponential(3));
-  //       tr.append("td").text(data['count'][i]['word']+'/'+ data['count'][i]['value'].toExponential(3));
-  //       tr.append("td").text(data['degree_cen'][i]['word']+'/'+ data['degree_cen'][i]['value'].toExponential(3));
-  //       tr.append("td").text(data['eigenvector_cen'][i]['word']+'/'+ data['eigenvector_cen'][i]['value'].toExponential(3));
-  //       // tr.append("td").text(data[i]['value']);
-  //     }
-  //   }
-  // }
+        tr.append("td").text(data['between_cen'][i]['word']+'/'+ data['between_cen'][i]['value'].toExponential(3));
+        tr.append("td").text(data['closeness_cen'][i]['word']+'/'+ data['closeness_cen'][i]['value'].toExponential(3));
+        tr.append("td").text(data['count'][i]['word']+'/'+ data['count'][i]['value'].toExponential(3));
+        tr.append("td").text(data['degree_cen'][i]['word']+'/'+ data['degree_cen'][i]['value'].toExponential(3));
+        tr.append("td").text(data['eigenvector_cen'][i]['word']+'/'+ data['eigenvector_cen'][i]['value'].toExponential(3));
+        // tr.append("td").text(data[i]['value']);
+      }
+    }
+  }
 
-  // /**
-  //  * @description draw a bar chart using the data using d3
-  //  */
+  /**
+   * @description draw a bar chart using the data using d3
+   */
 
-  // drawBarChart(data_str:string){
-  //   let data:Array<{word:string,value:number}> = JSON.parse(data_str);
+  drawBarChart(data_str:string){
+    let data:Array<{word:string,value:number}> = JSON.parse(data_str);
 
-  //   // console.log(data);
-  //   // let data=[
-  //   //   {word:"북한",count:10},
-  //   //   {word:"통일",count:9},
-  //   //   {word:"문재인",count:9},
-  //   //   {word:"박근혜",count:8}
-  //   // ];
+    // console.log(data);
+    // let data=[
+    //   {word:"북한",count:10},
+    //   {word:"통일",count:9},
+    //   {word:"문재인",count:9},
+    //   {word:"박근혜",count:8}
+    // ];
 
-  //   let margin = ({top: 20, right: 0, bottom: 30, left: 40});
-  //   let width = 1000;
-  //   let height = 500;
+    let margin = ({top: 20, right: 0, bottom: 30, left: 40});
+    let width = 1000;
+    let height = 500;
 
-  //   function zoom(svg) {
-  //     const extent : [[number,number],[number,number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
+    function zoom(svg) {
+      const extent : [[number,number],[number,number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
 
-  //     svg.call(d3.zoom()
-  //         .scaleExtent([1, 8])
-  //         .translateExtent(extent)
-  //         .extent(extent)
-  //         .on("zoom", zoomed));
+      svg.call(d3.zoom()
+          .scaleExtent([1, 8])
+          .translateExtent(extent)
+          .extent(extent)
+          .on("zoom", zoomed));
 
-  //     function zoomed(event) {
-  //       x.range([margin.left, width - margin.right].map(d => event.transform.applyX(d)));
-  //       svg.selectAll(".bars rect").attr("x", d => x(d.word)).attr("width", x.bandwidth());
-  //       svg.selectAll(".x-axis").call(xAxis);
-  //     }
-  //   }
+      function zoomed(event) {
+        x.range([margin.left, width - margin.right].map(d => event.transform.applyX(d)));
+        svg.selectAll(".bars rect").attr("x", d => x(d.word)).attr("width", x.bandwidth());
+        svg.selectAll(".x-axis").call(xAxis);
+      }
+    }
 
-  //   const xAxis = g => g
-  //   .attr("transform", `translate(0,${height - margin.bottom})`)
-  //   .call(d3.axisBottom(x).tickSizeOuter(0))
+    const xAxis = g => g
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0))
 
-  //   const yAxis = g => g
-  //     .attr("transform", `translate(${margin.left},0)`)
-  //     .call(d3.axisLeft(y))
-  //     .call(g => g.select(".domain").remove())
+    const yAxis = g => g
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y))
+      .call(g => g.select(".domain").remove())
 
-  //   // Create the X-axis band scale
-  //   const x = d3.scaleBand()
-  //     .domain(data.map(d => d.word))
-  //     .range([margin.left, width - margin.right])
-  //     .padding(0.1)
+    // Create the X-axis band scale
+    const x = d3.scaleBand()
+      .domain(data.map(d => d.word))
+      .range([margin.left, width - margin.right])
+      .padding(0.1)
 
-  //   // Create the Y-axis band scale
-  //   const y = d3.scaleLinear()
-  //     .domain([0, d3.max(data, d => d.value)]).nice()
-  //     .range([height - margin.bottom, margin.top])
+    // Create the Y-axis band scale
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.value)]).nice()
+      .range([height - margin.bottom, margin.top])
 
-  //   const svg = d3.select("figure#bar")
-  //     .append("svg")
-  //     .attr("id","svgstart")
-  //     .attr("viewBox", "0, 0," + width+","+ height)
-  //     .call(zoom);
+    const svg = d3.select("figure#bar")
+      .append("svg")
+      .attr("id","svgstart")
+      .attr("viewBox", "0, 0," + width+","+ height)
+      .call(zoom);
 
-  //   // Draw bars
-  //   svg.append("g")
-  //     .attr("class", "bars")
-  //     .attr("fill", "steelblue")
-  //   .selectAll("rect")
-  //   .data(data)
-  //   .join("rect")
-  //     .attr("x", d => x(d.word))
-  //     .attr("y", d => y(d.value))
-  //     .attr("height", d => y(0) - y(d.value))
-  //     .attr("width", x.bandwidth())
-  //   .on("mouseover",function(e,d){
-  //     tooltip
-  //       .html("Word: " + d.word + "<br>" + "Value: " + d.value)
-  //       .style("opacity", 1)
-  //     d3.select(this).attr("fill","red")})
-  //   .on("mousemove", function(e, d) {
-  //     tooltip
-  //     .style("left", (e.pageX+20) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-  //     .style("top", (e.pageY) + "px")})
-  //   .on("mouseout",function(){
-  //     d3.select(this).attr("fill","steelblue");
-  //     tooltip.style("opacity", 0);});
+    // Draw bars
+    svg.append("g")
+      .attr("class", "bars")
+      .attr("fill", "steelblue")
+    .selectAll("rect")
+    .data(data)
+    .join("rect")
+      .attr("x", d => x(d.word))
+      .attr("y", d => y(d.value))
+      .attr("height", d => y(0) - y(d.value))
+      .attr("width", x.bandwidth())
+    .on("mouseover",function(e,d){
+      tooltip
+        .html("Word: " + d.word + "<br>" + "Value: " + d.value)
+        .style("opacity", 1)
+      d3.select(this).attr("fill","red")})
+    .on("mousemove", function(e, d) {
+      tooltip
+      .style("left", (e.pageX+20) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+      .style("top", (e.pageY) + "px")})
+    .on("mouseout",function(){
+      d3.select(this).attr("fill","steelblue");
+      tooltip.style("opacity", 0);});
 
-  //   // Draw the X-axis on the DOM
-  //   svg.append("g")
-  //     .attr("class", "x-axis")
-  //     .call(xAxis)
-  //     .selectAll("text")
-  //     .attr("transform", "rotate(-45)")
-  //     .style("text-anchor", "end");
+    // Draw the X-axis on the DOM
+    svg.append("g")
+      .attr("class", "x-axis")
+      .call(xAxis)
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
 
-  //   // Draw the Y-axis on the DOM
-  //   svg.append("g")
-  //     .attr("class","y-axis")
-  //     .call(yAxis);
+    // Draw the Y-axis on the DOM
+    svg.append("g")
+      .attr("class","y-axis")
+      .call(yAxis);
 
-  //   // Draw a tooltip
-  //   const tooltip = d3.select("figure#bar")
-  //     .append("div")
-  //     .style("opacity", 0)
-  //     .style("position","absolute")
-  //     .style("background-color", "white")
-  //     .style("border", "solid")
-  //     .style("border-width", "1px")
-  //     .style("border-radius", "5px")
-  //     .style("padding", "10px");
-  // }
+    // Draw a tooltip
+    const tooltip = d3.select("figure#bar")
+      .append("div")
+      .style("opacity", 0)
+      .style("position","absolute")
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "1px")
+      .style("border-radius", "5px")
+      .style("padding", "10px");
+  }
 
   // /**
   //  * @description draw a scatter chart using the data using d3
