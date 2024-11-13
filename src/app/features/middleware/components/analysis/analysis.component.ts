@@ -378,21 +378,37 @@ export class AnalysisComponent implements OnInit {
     return this.http.get<{ state: string }>(url);
   }
 
-  getAnalysisResult() {
-    const url = `${this.middlewareUrl}/read_file`;
-    console.log("Getting results from ", url);
+  // getAnalysisResult() {
+  //   const url = `${this.middlewareUrl}/read_file`;
+  //   console.log("Getting results from ", url);
 
-    // Send output_path in the body as JSON
-    this.http.get<{ result: string }>(url).subscribe(
-      (response) => {
-        console.log("Analysis result:", response);
-        this.analysisedData = response;
-      },
-      (error) => {
-        console.error("Error fetching analysis result:", error);
-      },
-    );
-  }
+  //   // Send output_path in the body as JSON
+  //   this.http.post<{ result: string }>(url, { output_path: this.output_path }).subscribe(
+  //     (response) => {
+  //       console.log("Analysis result:", response);
+  //       this.analysisedData = response;
+  //     },
+  //     (error) => {
+  //       console.error("Error fetching analysis result:", error);
+  //     },
+  //   );
+  // }
+
+getAnalysisResult() {
+  const url = `${this.middlewareUrl}/read_file?output_path=${(this.output_path)}`;
+  console.log("Getting results from ", url);
+
+  this.http.get<{ file_content: string }>(url).subscribe(
+    (response) => {
+      console.log("Analysis result:", response);
+      this.analysisedData = response.file_content;  // Adjust if file_content is directly returned
+    },
+    (error) => {
+      console.error("Error fetching analysis result:", error);
+    },
+  );
+}
+
 
   //   if(this.activity=='count'|| this.activity=='tfidf'){
   //     this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
