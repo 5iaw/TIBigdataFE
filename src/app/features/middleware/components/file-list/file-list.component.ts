@@ -71,19 +71,42 @@ export class FileListComponent implements OnInit {
       return;
     }
 
-    console.log(`Submitting ${type} analysis with parameters:`);
-    console.log("Selected File IDs:", selectedFileIds);
-    console.log("Display Value:", this.displayValue);
-    console.log("Owner:", this.owner);
-
-    const analysisParams = {
-      display_value: this.displayValue,
-      input_file_ids: selectedFileIds, // Pass array of file IDs
+    // Prepare analysisParams based on the analysis type
+    let analysisParams: any = {
       owner: this.owner,
+      input_file_ids: selectedFileIds,
     };
+    switch (type) {
+      case "wordcount":
+        analysisParams.display_value = this.displayValue;
+        break;
+      case "kmeans":
+        analysisParams.k_value = this.displayValue; // assuming displayValue is used for k_value
+        break;
+      case "w2v":
+        analysisParams.w2v_param = this.displayValue;
+        break;
+      case "tfidf":
+        analysisParams.tfidf_param = this.displayValue;
+        break;
+      case "lda":
+        analysisParams.lda_param = this.displayValue;
+        break;
+      case "sma":
+        analysisParams.optionList = "default_option";
+        analysisParams.linkStrength = "default_strength";
+        break;
+      case "ngrams":
+        analysisParams.optionList = "default_option";
+        analysisParams.n = 5; // example n value
+        analysisParams.linkStrength = "default_strength";
+        break;
+      default:
+        console.error(`Unknown analysis type: ${type}`);
+        return;
+    }
 
-    console.log("Analysis Parameters:", analysisParams);
-
+    console.log("Submitting analysis job with parameters:", analysisParams);
     this.middlewareService.submitAnalysis(type, analysisParams).subscribe(
       (response) => {
         if (response.success) {
@@ -99,12 +122,6 @@ export class FileListComponent implements OnInit {
         console.error(`Error submitting ${type} analysis job:`, error);
       },
     );
-  }
-  navigateToFolder(folder: FileSystemEntity): void {
-    if (folder.type === "folder") {
-      this.currentPath = folder.path;
-      this.loadFolderContents();
-    }
   }
 
   navigateUp(): void {
