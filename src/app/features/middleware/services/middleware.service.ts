@@ -21,6 +21,7 @@ interface ErrorResponse {
 })
 export class MiddlewareService {
   private baseUrl = "http://localhost:10000/file";
+  private analysis_url = "http://localhost:10000/input_livy";
 
   constructor(private http: HttpClient) {}
 
@@ -78,14 +79,35 @@ export class MiddlewareService {
     return this.http.post(`${this.baseUrl}/upload`, formData);
   }
 
+  // Method to submit analysis jobs
+  // Method to submit analysis jobs dynamically by type
+  submitAnalysis(type: string, params: any): Observable<any> {
+    console.log(`Sending ${type} analysis job to server with params:`, params);
+    return this.http.post(`${this.analysis_url}/submit_${type}`, params).pipe(
+      map((response) => {
+        console.log(`${type} analysis server response:`, response); // Log response
+        return response;
+      }),
+      catchError((error) => {
+        console.error(`${type} analysis server error:`, error); // Log error if it occurs
+        return of({
+          success: false,
+          message: "Failed to submit analysis job.",
+        });
+      }),
+    );
+  }
+  submitAnalysisJob(params: any): Observable<any> {
+    return this.http.post(`${this.analysis_url}/submit_wordcount`, params);
+  }
   deleteFileOrFolderById(id: string): Observable<any> {
     const params = new HttpParams().set("id", id);
     return this.http.delete(`${this.baseUrl}/delete`, { params });
   }
 
   // Download a file
-  downloadFile(path: string): Observable<Blob> {
-    const params = new HttpParams().set("path", path);
+  downloadFile(id: string): Observable<Blob> {
+    const params = new HttpParams().set("id", id);
     return this.http.get(`${this.baseUrl}/download`, {
       params,
       responseType: "blob",
@@ -110,7 +132,11 @@ export class MiddlewareService {
       new_name: newName,
     });
   }
-  moveFileOrFolder(id: string, owner: string, newParentPath: string): Observable<any> {
+  moveFileOrFolder(
+    id: string,
+    owner: string,
+    newParentPath: string,
+  ): Observable<any> {
     return this.http.put(`${this.baseUrl}/move`, {
       id: id,
       owner: owner,
