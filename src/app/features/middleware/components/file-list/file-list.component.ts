@@ -113,6 +113,7 @@ export class FileListComponent implements OnInit {
     const analysisParams: any = {
       owner: this.owner,
       input_file_ids: selectedFileIds,
+      parent_path: this.currentPath,
     };
 
     // Assign parameters based on the analysis type
@@ -178,6 +179,12 @@ export class FileListComponent implements OnInit {
     }
   }
 
+  navigateToFolder(folder: FileSystemEntity): void {
+    if (folder.type === "folder") {
+      this.currentPath = folder.path;
+      this.loadFolderContents();
+    }
+  }
   deleteFile(file: FileSystemEntity): void {
     if (!file.id) {
       console.error("File ID is missing.");
