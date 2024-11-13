@@ -28,6 +28,8 @@ export class FileListComponent implements OnInit {
   currentPath = "/users/kubicuser";
   fileList: FileSystemEntity[] = [];
   newFolderName: string = "";
+  // Add this line to define displayValue with a default value (modify as needed)
+  displayValue: number = 5; // Set a default value or leave undefined if input is optional
 
   constructor(private middlewareService: MiddlewareService) {}
 
@@ -37,11 +39,12 @@ export class FileListComponent implements OnInit {
 
   // Load the contents of the current folder
 
+  // Load the contents of the current folder
   loadFolderContents(): void {
     this.middlewareService.getFileList(this.owner, this.currentPath).subscribe(
       (files: FileSystemEntity[]) => {
         this.fileList = files;
-        console.log("File list loaded:", this.fileList); // Log file list to debug
+        console.log("File list loaded:", this.fileList);
       },
       (error) => {
         console.error("Error loading folder contents:", error);
@@ -49,6 +52,54 @@ export class FileListComponent implements OnInit {
     );
   }
 
+  // Select files for analysis
+
+  getSelectedFiles(): string[] {
+    const selectedFiles = this.fileList
+      .filter((file) => file.selected && file.type === "file")
+      .map((file) => file.id); // Only pass the `id`
+
+    console.log("Selected file IDs for analysis:", selectedFiles); // Log selected file IDs
+    return selectedFiles;
+  }
+
+  submitAnalysis(type: string): void {
+    const selectedFileIds = this.getSelectedFiles();
+
+    if (selectedFileIds.length === 0) {
+      console.error("No files selected for analysis.");
+      return;
+    }
+
+    console.log(`Submitting ${type} analysis with parameters:`);
+    console.log("Selected File IDs:", selectedFileIds);
+    console.log("Display Value:", this.displayValue);
+    console.log("Owner:", this.owner);
+
+    const analysisParams = {
+      display_value: this.displayValue,
+      input_file_ids: selectedFileIds, // Pass array of file IDs
+      owner: this.owner,
+    };
+
+    console.log("Analysis Parameters:", analysisParams);
+
+    this.middlewareService.submitAnalysis(type, analysisParams).subscribe(
+      (response) => {
+        if (response.success) {
+          console.log(`${type} analysis job submitted successfully.`, response);
+        } else {
+          console.error(
+            `Failed to submit ${type} analysis job:`,
+            response.message,
+          );
+        }
+      },
+      (error) => {
+        console.error(`Error submitting ${type} analysis job:`, error);
+      },
+    );
+  }
   navigateToFolder(folder: FileSystemEntity): void {
     if (folder.type === "folder") {
       this.currentPath = folder.path;
@@ -81,8 +132,8 @@ export class FileListComponent implements OnInit {
       });
   }
 
-  downloadFile(filePath: string, fileName: string): void {
-    this.middlewareService.downloadFile(filePath).subscribe((response) => {
+  downloadFile(id: string, fileName: string): void {
+    this.middlewareService.downloadFile(id).subscribe((response) => {
       const blob = new Blob([response], { type: response.type });
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");

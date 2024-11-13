@@ -9,6 +9,8 @@ export class FileSystemEntity {
   updatedAt: Date;
   type: "file" | "folder";
 
+  selected: boolean = false;
+
   constructor(data: Partial<FileSystemEntity> = {}) {
     this.id = data.id || "";
     this.name = data.name || "";

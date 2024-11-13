@@ -12,6 +12,9 @@
   <div *ngIf="fileList && fileList.length > 0; else noFiles">
     <ul>
       <li *ngFor="let file of fileList">
+        <!-- Selection Checkbox -->
+        <input type="checkbox" [(ngModel)]="file.selected" />
+
         <!-- Folder Navigation: Clickable name if it's a folder -->
         <span *ngIf="file.type === 'folder'" (click)="navigateToFolder(file)">
           📁 {{ file.name }}
@@ -20,14 +23,12 @@
         <!-- File Display with Download Option -->
         <span *ngIf="file.type !== 'folder'">
           📄 {{ file.name }}
-          <button (click)="downloadFile(file.path, file.name)">Download</button>
+          <button (click)="downloadFile(file.id, file.name)">Download</button>
         </span>
 
-        <!-- Delete Option for Both Files and Folders -->
+        <!-- Delete and Rename Options for Files and Folders -->
         <button (click)="deleteFile(file)">Delete</button>
         <button (click)="renameFile(file)">Rename</button>
-        <button (click)="moveFile(file)">Move</button>
-        <!-- New Move Button -->
       </li>
     </ul>
   </div>
@@ -44,4 +45,22 @@
     placeholder="New folder name"
   />
   <button (click)="createNewFolder()">Create Folder</button>
+  <!-- file-list.component.html -->
+  <div>
+    <!-- Input for displayValue, if user needs to set it -->
+    <label for="displayValue">Display Value:</label>
+    <input type="number" [(ngModel)]="displayValue" id="displayValue" />
+  </div>
+
+  <!-- Button to trigger analysis -->
+  <button (click)="submitAnalysis()">Submit Analysis</button>
+
+  <!-- Analysis Buttons -->
+  <div class="analysis-buttons">
+    <button (click)="submitAnalysis('wordcount')">Run Word Count</button>
+    <button (click)="submitAnalysis('kmeans')">Run K-Means</button>
+    <button (click)="submitAnalysis('w2v')">Run Word2Vec</button>
+    <button (click)="submitAnalysis('tfidf')">Run TF-IDF</button>
+    <button (click)="submitAnalysis('lda')">Run LDA</button>
+  </div>
 </div>
