@@ -1,10 +1,4 @@
 <div>
-  <!-- Upload Component embedded in File List with custom file name -->
-  <app-upload
-    [currentPath]="currentPath"
-    (uploadSuccess)="loadFolderContents()"
-  ></app-upload>
-
   <!-- Folder Navigation -->
   <button (click)="navigateUp()">Go Up</button>
 
@@ -12,28 +6,19 @@
   <div *ngIf="fileList && fileList.length > 0; else noFiles">
     <ul>
       <li *ngFor="let file of fileList">
-        <!-- Selection Checkbox -->
         <input type="checkbox" [(ngModel)]="file.selected" />
-
-        <!-- Folder Navigation: Clickable name if it's a folder -->
         <span *ngIf="file.type === 'folder'" (click)="navigateToFolder(file)">
           📁 {{ file.name }}
         </span>
-
-        <!-- File Display with Download Option -->
         <span *ngIf="file.type !== 'folder'">
           📄 {{ file.name }}
           <button (click)="downloadFile(file.id, file.name)">Download</button>
         </span>
-
-        <!-- Delete and Rename Options for Files and Folders -->
         <button (click)="deleteFile(file)">Delete</button>
         <button (click)="renameFile(file)">Rename</button>
       </li>
     </ul>
   </div>
-
-  <!-- No Files or Folders Available -->
   <ng-template #noFiles>
     <p>No files or folders available.</p>
   </ng-template>
@@ -45,22 +30,74 @@
     placeholder="New folder name"
   />
   <button (click)="createNewFolder()">Create Folder</button>
-  <!-- file-list.component.html -->
+
+  <!-- Analysis Type Selection -->
   <div>
-    <!-- Input for displayValue, if user needs to set it -->
-    <label for="displayValue">Display Value:</label>
-    <input type="number" [(ngModel)]="displayValue" id="displayValue" />
+    <label for="analysisType">Select Analysis Type:</label>
+    <select
+      [(ngModel)]="selectedAnalysisType"
+      id="analysisType"
+      (change)="onAnalysisTypeChange()"
+    >
+      <option value="wordcount">Word Count</option>
+      <option value="kmeans">K-Means</option>
+      <option value="w2v">Word2Vec</option>
+      <option value="tfidf">TF-IDF</option>
+      <option value="lda">LDA</option>
+      <option value="sma">SMA</option>
+      <option value="ngrams">N-Grams</option>
+    </select>
   </div>
 
-  <!-- Button to trigger analysis -->
-  <button (click)="submitAnalysis()">Submit Analysis</button>
+  <!-- Dynamic Analysis Parameter Inputs -->
+  <div *ngIf="selectedAnalysisType">
+    <div *ngIf="showDisplayValue">
+      <label for="displayValue">Display Value:</label>
+      <input type="number" [(ngModel)]="displayValue" id="displayValue" />
+    </div>
 
-  <!-- Analysis Buttons -->
-  <div class="analysis-buttons">
-    <button (click)="submitAnalysis('wordcount')">Run Word Count</button>
-    <button (click)="submitAnalysis('kmeans')">Run K-Means</button>
-    <button (click)="submitAnalysis('w2v')">Run Word2Vec</button>
-    <button (click)="submitAnalysis('tfidf')">Run TF-IDF</button>
-    <button (click)="submitAnalysis('lda')">Run LDA</button>
+    <div *ngIf="showKValue">
+      <label for="kValue">K-Value:</label>
+      <input type="number" [(ngModel)]="kValue" id="kValue" />
+    </div>
+
+    <div *ngIf="showW2VParam">
+      <label for="w2vParam">W2V Param:</label>
+      <input type="number" [(ngModel)]="w2vParam" id="w2vParam" />
+    </div>
+
+    <div *ngIf="showTFIDFParam">
+      <label for="tfidfParam">TF-IDF Param:</label>
+      <input type="number" [(ngModel)]="tfidfParam" id="tfidfParam" />
+    </div>
+
+    <div *ngIf="showLDAParam">
+      <label for="ldaParam">LDA Param:</label>
+      <input type="number" [(ngModel)]="ldaParam" id="ldaParam" />
+    </div>
+
+    <div *ngIf="showOptionList">
+      <label for="optionList">Option List:</label>
+      <input type="number" [(ngModel)]="optionList" id="optionList" />
+    </div>
+
+    <div *ngIf="showLinkStrength">
+      <label for="linkStrength">Link Strength (1-100):</label>
+      <input
+        type="number"
+        [(ngModel)]="linkStrength"
+        id="linkStrength"
+        min="1"
+        max="100"
+      />
+    </div>
+
+    <div *ngIf="showNValue">
+      <label for="nValue">N-Value:</label>
+      <input type="number" [(ngModel)]="nValue" id="nValue" />
+    </div>
+
+    <!-- Submit Job Button -->
+    <button (click)="submitJob()">Submit Job</button>
   </div>
 </div>

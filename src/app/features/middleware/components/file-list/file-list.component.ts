@@ -23,13 +23,31 @@ type FolderContentsResponse = SuccessResponse | ErrorResponse;
   styleUrls: ["./file-list.component.css"],
 })
 export class FileListComponent implements OnInit {
-  files: FileSystemEntity[] = [];
+  fileList: FileSystemEntity[] = [];
   owner = "kubicuser";
   currentPath = "/users/kubicuser";
-  fileList: FileSystemEntity[] = [];
   newFolderName: string = "";
-  // Add this line to define displayValue with a default value (modify as needed)
-  displayValue: number = 5; // Set a default value or leave undefined if input is optional
+
+  // Analysis-specific properties
+  selectedAnalysisType: string = "";
+  displayValue: number = 10;
+  kValue: number = 3;
+  w2vParam: number = 5;
+  tfidfParam: number = 5;
+  ldaParam: number = 5;
+  optionList: number = 5;
+  linkStrength: number = 50;
+  nValue: number = 2;
+
+  // Controls for dynamic fields
+  showDisplayValue: boolean = false;
+  showKValue: boolean = false;
+  showW2VParam: boolean = false;
+  showTFIDFParam: boolean = false;
+  showLDAParam: boolean = false;
+  showOptionList: boolean = false;
+  showLinkStrength: boolean = false;
+  showNValue: boolean = false;
 
   constructor(private middlewareService: MiddlewareService) {}
 
@@ -37,93 +55,120 @@ export class FileListComponent implements OnInit {
     this.loadFolderContents();
   }
 
-  // Load the contents of the current folder
-
-  // Load the contents of the current folder
   loadFolderContents(): void {
     this.middlewareService.getFileList(this.owner, this.currentPath).subscribe(
-      (files: FileSystemEntity[]) => {
-        this.fileList = files;
-        console.log("File list loaded:", this.fileList);
-      },
-      (error) => {
-        console.error("Error loading folder contents:", error);
-      },
+      (files) => (this.fileList = files),
+      (error) => console.error("Error loading folder contents:", error),
     );
   }
 
-  // Select files for analysis
+  onAnalysisTypeChange(): void {
+    // Reset all controls
+    this.showDisplayValue =
+      this.showKValue =
+      this.showW2VParam =
+      this.showTFIDFParam =
+      this.showLDAParam =
+      this.showOptionList =
+      this.showLinkStrength =
+      this.showNValue =
+        false;
 
-  getSelectedFiles(): string[] {
-    const selectedFiles = this.fileList
-      .filter((file) => file.selected && file.type === "file")
-      .map((file) => file.id); // Only pass the `id`
-
-    console.log("Selected file IDs for analysis:", selectedFiles); // Log selected file IDs
-    return selectedFiles;
+    // Display relevant controls based on selected analysis type
+    switch (this.selectedAnalysisType) {
+      case "wordcount":
+        this.showDisplayValue = true;
+        break;
+      case "kmeans":
+        this.showKValue = true;
+        break;
+      case "w2v":
+        this.showW2VParam = true;
+        break;
+      case "tfidf":
+        this.showTFIDFParam = true;
+        break;
+      case "lda":
+        this.showLDAParam = true;
+        break;
+      case "sma":
+        this.showOptionList = true;
+        this.showLinkStrength = true;
+        break;
+      case "ngrams":
+        this.showOptionList = true;
+        this.showNValue = true;
+        this.showLinkStrength = true;
+        break;
+    }
   }
 
-  submitAnalysis(type: string): void {
+  submitJob(): void {
     const selectedFileIds = this.getSelectedFiles();
-
     if (selectedFileIds.length === 0) {
       console.error("No files selected for analysis.");
       return;
     }
 
-    // Prepare analysisParams based on the analysis type
-    let analysisParams: any = {
+    const analysisParams: any = {
       owner: this.owner,
       input_file_ids: selectedFileIds,
     };
-    switch (type) {
+
+    // Assign parameters based on the analysis type
+    switch (this.selectedAnalysisType) {
       case "wordcount":
         analysisParams.display_value = this.displayValue;
         break;
       case "kmeans":
-        analysisParams.k_value = this.displayValue; // assuming displayValue is used for k_value
+        analysisParams.k_value = this.kValue;
         break;
       case "w2v":
-        analysisParams.w2v_param = this.displayValue;
+        analysisParams.w2v_param = this.w2vParam;
         break;
       case "tfidf":
-        analysisParams.tfidf_param = this.displayValue;
+        analysisParams.tfidf_param = this.tfidfParam;
         break;
       case "lda":
-        analysisParams.lda_param = this.displayValue;
+        analysisParams.lda_param = this.ldaParam;
         break;
       case "sma":
-        analysisParams.optionList = "default_option";
-        analysisParams.linkStrength = "default_strength";
+        analysisParams.optionList = this.optionList;
+        analysisParams.linkStrength = this.linkStrength;
         break;
       case "ngrams":
-        analysisParams.optionList = "default_option";
-        analysisParams.n = 5; // example n value
-        analysisParams.linkStrength = "default_strength";
+        analysisParams.optionList = this.optionList;
+        analysisParams.n = this.nValue;
+        analysisParams.linkStrength = this.linkStrength;
         break;
-      default:
-        console.error(`Unknown analysis type: ${type}`);
-        return;
     }
 
-    console.log("Submitting analysis job with parameters:", analysisParams);
-    this.middlewareService.submitAnalysis(type, analysisParams).subscribe(
-      (response) => {
-        if (response.success) {
-          console.log(`${type} analysis job submitted successfully.`, response);
-        } else {
+    this.middlewareService
+      .submitAnalysis(this.selectedAnalysisType, analysisParams)
+      .subscribe(
+        (response) =>
+          response.success
+            ? console.log(
+                `${this.selectedAnalysisType} analysis job submitted successfully.`,
+                response,
+              )
+            : console.error(
+                `Failed to submit ${this.selectedAnalysisType} analysis job:`,
+                response.message,
+              ),
+        (error) =>
           console.error(
-            `Failed to submit ${type} analysis job:`,
-            response.message,
-          );
-        }
-      },
-      (error) => {
-        console.error(`Error submitting ${type} analysis job:`, error);
-      },
-    );
+            `Error submitting ${this.selectedAnalysisType} analysis job:`,
+            error,
+          ),
+      );
   }
 
+  getSelectedFiles(): string[] {
+    return this.fileList
+      .filter((file) => file.selected && file.type === "file")
+      .map((file) => file.id);
+  }
   navigateUp(): void {
     if (this.currentPath !== "/users/kubicuser") {
       const lastSlashIndex = this.currentPath.lastIndexOf("/");
