@@ -1,33 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
-import { HttpClient } from '@angular/common/http';
+import { HttpClient } from "@angular/common/http";
 
 @Component({
-  selector: 'app-connection',
-  templateUrl: './connection.component.html',
-  styleUrls: ['./connection.component.less']
+  selector: "app-connection",
+  templateUrl: "./connection.component.html",
+  styleUrls: ["./connection.component.less"],
 })
 export class ConnectionComponent implements OnInit {
-  keyword: string = '';  // Holds the input keyword
-  searchResults: any[] = [];  // Holds the search results
+  keyword: string = ""; // Holds the input keyword
+  searchResults: any[] = []; // Holds the search results
 
   private _title: string = "";
   private _currentMenu: string = "";
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
     let url = this.router.url.split("/");
-    console.log('URL: ', url);
+    console.log("URL: ", url);
     this.currentMenu = url[url.length - 1];
     this.setTitle(this.currentMenu);
   }
 
   selectedStyleObject(flag: boolean): Object {
-    if(matchMedia("(max-width: 425px)").matches) {
+    if (matchMedia("(max-width: 425px)").matches) {
       if (flag) {
         return {
           "font-weight": "bold",
-          "border-bottom" : "0.2rem solid #0FBAFF",
+          "border-bottom": "0.2rem solid #0FBAFF",
         };
       } else {
         return {
@@ -35,7 +35,7 @@ export class ConnectionComponent implements OnInit {
           "background-color": "white",
         };
       }
-    }else{
+    } else {
       if (flag) {
         return {
           color: "#0FBAFF",
@@ -54,13 +54,13 @@ export class ConnectionComponent implements OnInit {
    * @param currentAddress
    */
   setTitle(currentAddress: string) {
-    if (currentAddress === "fileupload") this.title = 'File Upload';
+    if (currentAddress === "fileupload") this.title = "File Upload";
     if (currentAddress === "search") this.title = "Search Menu";
     if (currentAddress === "analysis") this.title = "Analysis Menu";
   }
 
-  toFileUpload() {
-    this.router.navigateByUrl("/middleware/fileupload");
+  toFileList() {
+    this.router.navigateByUrl("/middleware/file-list");
     this.ngOnInit();
   }
 
@@ -87,7 +87,6 @@ export class ConnectionComponent implements OnInit {
     this._title = value;
   }
 
-
   // constructor(private http: HttpClient) {}
 
   // onSearch() {
@@ -98,28 +97,28 @@ export class ConnectionComponent implements OnInit {
   //     return;
   //   }
 
-    // Update the URL with the full address of your middleware
-    // const middlewareUrl = 'http://localhost:10000/esQueryTest';
+  // Update the URL with the full address of your middleware
+  // const middlewareUrl = 'http://localhost:10000/esQueryTest';
 
-    // // Send the keyword to the backend
-    // this.http.post<any>(middlewareUrl, { keyword: this.keyword }).subscribe(
-    //   (response) => {
-    //     console.log('Search response received:', response);
-    //     if (response && response.results) {
-    //       this.searchResults = response.results;  // Assume response contains 'results' field
-        
-    //       // this.searchResults.forEach(result => {
-    //       //   console.log('Document ID:', result._id);
-    //       //   console.log('Document Data:', result.source);
-    //       // });
-    //     } else {
-    //       this.searchResults = [];  // No results found
-    //     }
-    //   },
-    //   (error) => {
-    //     console.error('Error:', error);
-    //     alert('An error occurred while fetching data.');
-    //   }
-    // );
+  // // Send the keyword to the backend
+  // this.http.post<any>(middlewareUrl, { keyword: this.keyword }).subscribe(
+  //   (response) => {
+  //     console.log('Search response received:', response);
+  //     if (response && response.results) {
+  //       this.searchResults = response.results;  // Assume response contains 'results' field
+
+  //       // this.searchResults.forEach(result => {
+  //       //   console.log('Document ID:', result._id);
+  //       //   console.log('Document Data:', result.source);
+  //       // });
+  //     } else {
+  //       this.searchResults = [];  // No results found
+  //     }
+  //   },
+  //   (error) => {
+  //     console.error('Error:', error);
+  //     alert('An error occurred while fetching data.');
+  //   }
+  // );
   // }
 }

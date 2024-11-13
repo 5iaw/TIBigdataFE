@@ -110,4 +110,11 @@ export class MiddlewareService {
       new_name: newName,
     });
   }
+  moveFileOrFolder(id: string, owner: string, newParentPath: string): Observable<any> {
+    return this.http.put(`${this.baseUrl}/move`, {
+      id: id,
+      owner: owner,
+      new_parent_path: newParentPath,
+    });
+  }
 }

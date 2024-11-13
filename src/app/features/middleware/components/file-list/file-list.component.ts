@@ -135,4 +135,32 @@ export class FileListComponent implements OnInit {
       console.error("Folder name cannot be empty or contain only spaces");
     }
   }
+  // file-list.component.ts
+
+  moveFile(file: FileSystemEntity): void {
+    const newParentPath = prompt(
+      "Enter the new folder path to move this item:",
+      this.currentPath,
+    );
+
+    if (newParentPath && newParentPath !== file.parentPath) {
+      this.middlewareService
+        .moveFileOrFolder(file.id, this.owner, newParentPath)
+        .subscribe(
+          (response) => {
+            if (response.success) {
+              console.log("File or folder moved successfully.");
+              this.loadFolderContents(); // Reload folder contents to reflect the move
+            } else {
+              console.error("Failed to move file or folder:", response.message);
+            }
+          },
+          (error) => {
+            console.error("Error moving file or folder:", error);
+          },
+        );
+    } else {
+      console.log("Move cancelled or invalid path entered.");
+    }
+  }
 }

@@ -6,7 +6,7 @@ import { ElasticSearchComponent } from "./components/elasticsearch/elasticsearch
 
 import { UploadComponent } from "./components/upload/upload.component"; // Include any additional components
 import { TransferComponent } from "./components/transfer/transfer.component"; // Example component
-import { FileListComponent } from './components/file-list/file-list.component';
+import { FileListComponent } from "./components/file-list/file-list.component";
 
 const routes: Routes = [
   {
@@ -36,7 +36,7 @@ const routes: Routes = [
   },
 
   {
-    path: "list-files", // Route for Transfer component (if needed)
+    path: "file-list", // Route for Transfer component (if needed)
     component: FileListComponent,
   },
 ];
