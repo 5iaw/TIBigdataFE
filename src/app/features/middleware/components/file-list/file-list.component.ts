@@ -1,10 +1,11 @@
-// file-list.component.ts
-
 import { Component, OnInit } from "@angular/core";
+import { UserProfile } from "src/app/core/models/user.model";
+import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
 import { FileSystemEntity } from "../../models/FileSystemEntity.model";
 import { MiddlewareService } from "../../services/middleware.service";
 import { Observable, of } from "rxjs";
 import { catchError, map } from "rxjs/operators";
+
 interface SuccessResponse {
   success: true;
   contents: FileSystemEntity[];
@@ -17,6 +18,10 @@ interface ErrorResponse {
 
 type FolderContentsResponse = SuccessResponse | ErrorResponse;
 
+function encodeEmail(email: string): string {
+  return btoa(email).replace(/=/g, "");
+}
+
 @Component({
   selector: "app-file-list",
   templateUrl: "./file-list.component.html",
@@ -24,8 +29,8 @@ type FolderContentsResponse = SuccessResponse | ErrorResponse;
 })
 export class FileListComponent implements OnInit {
   fileList: FileSystemEntity[] = [];
-  owner = "kubicuser";
-  currentPath = "/users/kubicuser";
+  owner = "";
+  currentPath = "";
   newFolderName: string = "";
 
   // Analysis-specific properties
@@ -48,8 +53,22 @@ export class FileListComponent implements OnInit {
   showOptionList: boolean = false;
   showLinkStrength: boolean = false;
   showNValue: boolean = false;
+  currentUser: UserProfile;
 
-  constructor(private middlewareService: MiddlewareService) {}
+  // File upload properties
+  selectedFile: File | null = null;
+  customFileName: string = "";
+
+  constructor(
+    private authService: AuthenticationService,
+    private middlewareService: MiddlewareService
+  ) {
+    this.authService.getCurrentUserChange().subscribe((user) => {
+      this.currentUser = user;
+      this.owner = encodeEmail(this.currentUser.email);  // Encode email only once and set as owner
+      this.currentPath = `/users/${this.owner}`;  // Set initial path
+    });
+  }
 
   ngOnInit(): void {
     this.loadFolderContents();
@@ -62,8 +81,41 @@ export class FileListComponent implements OnInit {
     );
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      this.customFileName = this.selectedFile.name.split(".")[0]; // Set default name without extension
+    }
+  }
+
+  uploadFile(): void {
+    if (this.selectedFile && this.currentPath) {
+      const fileName =
+        this.customFileName.trim().replace(/\s+/g, "_") +
+        this.getFileExtension(this.selectedFile.name);
+      this.middlewareService
+        .uploadFile(this.owner, this.currentPath, this.selectedFile, fileName)
+        .subscribe(
+          (response) => {
+            console.log("File uploaded successfully");
+            this.loadFolderContents();
+          },
+          (error) => {
+            console.error("Error uploading file:", error);
+          }
+        );
+    } else {
+      console.error("No file selected or upload path missing");
+    }
+  }
+
+  private getFileExtension(fileName: string): string {
+    const index = fileName.lastIndexOf(".");
+    return index !== -1 ? fileName.substring(index) : ""; // Get file extension if present
+  }
+
   onAnalysisTypeChange(): void {
-    // Reset all controls
     this.showDisplayValue =
       this.showKValue =
       this.showW2VParam =
@@ -74,7 +126,6 @@ export class FileListComponent implements OnInit {
       this.showNValue =
         false;
 
-    // Display relevant controls based on selected analysis type
     switch (this.selectedAnalysisType) {
       case "wordcount":
         this.showDisplayValue = true;
@@ -116,7 +167,6 @@ export class FileListComponent implements OnInit {
       parent_path: this.currentPath,
     };
 
-    // Assign parameters based on the analysis type
     switch (this.selectedAnalysisType) {
       case "wordcount":
         analysisParams.display_value = this.displayValue;
@@ -170,11 +220,12 @@ export class FileListComponent implements OnInit {
       .filter((file) => file.selected && file.type === "file")
       .map((file) => file.id);
   }
+
   navigateUp(): void {
-    if (this.currentPath !== "/users/kubicuser") {
+    if (this.currentPath !== `/users/${this.owner}`) {
       const lastSlashIndex = this.currentPath.lastIndexOf("/");
       this.currentPath =
-        this.currentPath.substring(0, lastSlashIndex) || "/users/kubicuser";
+        this.currentPath.substring(0, lastSlashIndex) || `/users/${this.owner}`;
       this.loadFolderContents();
     }
   }
@@ -185,6 +236,7 @@ export class FileListComponent implements OnInit {
       this.loadFolderContents();
     }
   }
+
   deleteFile(file: FileSystemEntity): void {
     if (!file.id) {
       console.error("File ID is missing.");
@@ -212,6 +264,7 @@ export class FileListComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     });
   }
+
   renameFile(file: FileSystemEntity): void {
     const newName = prompt("Enter the new name:", file.name);
     if (newName && newName !== file.name) {
@@ -230,6 +283,7 @@ export class FileListComponent implements OnInit {
       );
     }
   }
+
   createNewFolder(): void {
     if (this.newFolderName.trim()) {
       this.middlewareService
@@ -255,7 +309,6 @@ export class FileListComponent implements OnInit {
       console.error("Folder name cannot be empty or contain only spaces");
     }
   }
-  // file-list.component.ts
 
   moveFile(file: FileSystemEntity): void {
     const newParentPath = prompt(
@@ -270,7 +323,7 @@ export class FileListComponent implements OnInit {
           (response) => {
             if (response.success) {
               console.log("File or folder moved successfully.");
-              this.loadFolderContents(); // Reload folder contents to reflect the move
+              this.loadFolderContents();
             } else {
               console.error("Failed to move file or folder:", response.message);
             }

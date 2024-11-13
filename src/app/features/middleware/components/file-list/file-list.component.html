@@ -1,4 +1,20 @@
 <div>
+  <!-- Upload Section -->
+  <div>
+    <input type="file" (change)="onFileSelected($event)" />
+    <input
+      type="text"
+      [(ngModel)]="customFileName"
+      placeholder="Enter file name (without extension)"
+    />
+    <button
+      (click)="uploadFile()"
+      [disabled]="!selectedFile || !customFileName.trim()"
+    >
+      Upload
+    </button>
+  </div>
+
   <!-- Folder Navigation -->
   <button (click)="navigateUp()">Go Up</button>
 
@@ -17,7 +33,6 @@
         <button (click)="deleteFile(file)">Delete</button>
         <button (click)="renameFile(file)">Rename</button>
         <button (click)="moveFile(file)">Move</button>
-        <!-- New Move button -->
       </li>
     </ul>
   </div>
@@ -32,6 +47,7 @@
     placeholder="New folder name"
   />
   <button (click)="createNewFolder()">Create Folder</button>
+
 
   <!-- Analysis Type Selection -->
   <div>
