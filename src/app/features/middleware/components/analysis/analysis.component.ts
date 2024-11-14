@@ -38,13 +38,13 @@ export class AnalysisComponent implements OnInit {
   jobId: string | null = null;
   private currentUser: UserProfile;
 
-  private middlewareUrl = "http://localhost:10000/spark";
+  private middlewareUrl = "https://localhost:10000/spark";
   constructor(
     private authService: AuthenticationService,
     private http: HttpClient) {
       this.authService.getCurrentUserChange().subscribe((currentUser) => {
         this.currentUser = currentUser;
-  
+
       });
     }
 
@@ -169,7 +169,7 @@ export class AnalysisComponent implements OnInit {
 
       this.loading = true; // Start loading
       // alert("Loading... Please wait."); // Display alert
-      
+
       this.activity = "tfidf";
       console.log("Posting to ", this.middlewareUrl + "/submit_tfidf");
       // Prepare payload to send to backend
@@ -526,7 +526,7 @@ getAnalysisResult() {
       // if (this.analysisedData.result_graph) {
       //     console.log("Result graph:", JSON.stringify(this.analysisedData.result_graph));
 
-          // call visualization 
+          // call visualization
         this.drawResultVisualizations();
       // } else {
       //     console.error("result_graph is undefined");
@@ -567,7 +567,7 @@ drawResultVisualizations(): void {
     // }
     else if(this.activity=='topicLDA')
       this.drawTopicModeling(JSON.stringify(this.analysisedData.result_graph));
-    
+
     else if(this.activity=='ner')
       this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
 

@@ -10,7 +10,7 @@ export class TransferComponent {
   esId: string = '';
   owner: string = '';
   message: string = '';
-  private apiUrl = 'http://localhost:10000/transfer';
+  private apiUrl = 'https://localhost:10000/transfer';
 
   constructor(private http: HttpClient) {}
 

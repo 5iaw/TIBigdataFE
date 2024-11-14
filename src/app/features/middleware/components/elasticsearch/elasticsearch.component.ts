@@ -17,7 +17,7 @@ export class ElasticSearchComponent {
     searchQuery: string;
     connectionStatus: string = 'Checking connection...';
 
-    private middlewareUrl = 'http://localhost:10000/spark'; 
+    private middlewareUrl = 'https://localhost:10000/spark';
 
     constructor(private http: HttpClient) { }
 
@@ -35,5 +35,5 @@ export class ElasticSearchComponent {
         );
     }
 
-    
+
 }
