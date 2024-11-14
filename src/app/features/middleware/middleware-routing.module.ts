@@ -12,7 +12,7 @@ import { FileListComponent } from "./components/file-list/file-list.component";
 const routes: Routes = [
   {
     path: "",
-    redirectTo: "analysis",
+    redirectTo: "file-list",
     pathMatch: "prefix",
   },
   {

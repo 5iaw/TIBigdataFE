@@ -5,7 +5,7 @@ import { HttpClient } from "@angular/common/http";
 @Component({
   selector: "app-connection",
   templateUrl: "./connection.component.html",
-  styleUrls: ["./connection.component.less"],
+  styleUrls: ["../../middleware-style.less"],
 })
 export class ConnectionComponent implements OnInit {
   keyword: string = ""; // Holds the input keyword

@@ -1,4 +1,4 @@
-<aside class="app-analysis-menu-container">
+<aside class="sidebar-container">
   <h1>{{ title }}</h1>
   <div class="menus">
     <ul>
@@ -12,8 +12,7 @@
       <li
         [ngStyle]="selectedStyleObject(currentMenu == 'es')"
         class="menu-item"
-        id="es"
-      >
+        id="es">
         <a (click)="toElasticSearch()">Search Menu</a>
       </li>
       <li

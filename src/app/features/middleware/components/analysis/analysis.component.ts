@@ -8,7 +8,7 @@ import { Observable } from "rxjs";
 import { HttpHeaders } from "@angular/common/http";
 import * as d3 from "d3";
 import { Tooltip } from "chart.js";
-import * as lda from "./ldavis.v3.0.0.js";
+import * as lda from "../file-list/ldavis.v3.0.0.js";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { UserProfile } from "src/app/core/models/user.model";
 import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
