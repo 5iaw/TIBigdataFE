@@ -1,4 +1,8 @@
-<div>
+<div class="content-container">
+  <app-connection></app-connection>
+  <section class="content">
+    <h1>File Options</h1>
+<div class = "uploadfile">
   <!-- Upload Section -->
   <div>
     <input type="file" (change)="onFileSelected($event)" />
@@ -19,7 +23,7 @@
   <button (click)="navigateUp()">Go Up</button>
 
   <!-- Display Files and Folders -->
-  <div *ngIf="fileList && fileList.length > 0; else noFiles">
+  <div class="showtree" *ngIf="fileList && fileList.length > 0; else noFiles">
     <ul>
       <li *ngFor="let file of fileList">
         <input type="checkbox" [(ngModel)]="file.selected" />
@@ -50,7 +54,7 @@
 
 
   <!-- Analysis Type Selection -->
-  <div>
+  <div class = analysis>
     <label for="analysisType">Select Analysis Type:</label>
     <select
       [(ngModel)]="selectedAnalysisType"
@@ -125,6 +129,6 @@
     <!-- Submit Job Button -->
     <button (click)="submitJob()">Submit Job</button>
 
-    <app-analysis></app-analysis>
+    <!-- <app-analysis></app-analysis> -->
   </div>
 </div>

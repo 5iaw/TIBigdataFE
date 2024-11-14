@@ -25,7 +25,7 @@ function encodeEmail(email: string): string {
 @Component({
   selector: "app-file-list",
   templateUrl: "./file-list.component.html",
-  styleUrls: ["./file-list.component.css"],
+  styleUrls: ["../../middleware-style.less"],
 })
 export class FileListComponent implements OnInit {
   fileList: FileSystemEntity[] = [];
