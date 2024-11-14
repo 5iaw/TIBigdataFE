@@ -143,4 +143,19 @@ export class MiddlewareService {
       new_parent_path: newParentPath,
     });
   }
+  getAnalysisResult(params: HttpParams): Observable<any> {
+    return this.http.get(`${this.analysis_url}/analysis`, { params }).pipe(
+      map((response) => {
+        console.log("Analysis result fetched successfully:", response);
+        return { success: true, file_content: response };
+      }),
+      catchError((error) => {
+        console.error("Failed to fetch analysis result:", error);
+        return of({
+          success: false,
+          message: "Error fetching analysis result.",
+        });
+      }),
+    );
+  }
 }
