@@ -29,6 +29,9 @@ export class AnalysisComponent implements OnInit {
   ngrams_value: string = "";
   ngrams_ls: string = "";
   ngrams_param: string = "";
+  hcluster_value: string = "";
+  ner_value: string = "";
+
   activity: string = "";
   analysisedData: any;
   output_path: string;
@@ -311,7 +314,7 @@ export class AnalysisComponent implements OnInit {
   submitNgrams(): void {
     if (this.ngrams_value && this.ngrams_ls && this.ngrams_param) {
       console.log(
-        "Submitting Semantic Network Analysis with params:",
+        "Submitting N-Grams Analysis with params:",
         this.ngrams_ls,
         this.ngrams_param,
         this.ngrams_ls,
@@ -351,6 +354,97 @@ export class AnalysisComponent implements OnInit {
       this.jobStatus = "Please enter valid parameters.";
     }
   }
+
+  submitHclustering(): void {
+    this.loading = true; // Start loading
+    // alert("Loading... Please wait."); // Display alert
+
+    this.activity = "hc";
+    console.log("Posting to ", this.middlewareUrl + "/submit_hclustering");
+    // Prepare payload to send to backend
+    const payload = { userEmail: this.currentUser.email };
+
+    // Send the job submission request
+    this.http.post(`${this.middlewareUrl}/submit_hclustering`, payload).subscribe(
+      (response: any) => {
+        console.log("Job submitted successfully:", response);
+        this.output_path = response.output_path;
+        this.jobId = response.id; // Assuming the response contains the job ID
+        this.jobStatus = "Job submitted, waiting for completion...";
+
+        // Now, periodically check the job status
+        this.pollJobStatus();
+      },
+      (error) => {
+        console.error("Error submitting job:", error);
+        this.jobStatus = "Failed to submit the job.";
+        this.loading = false;
+      },
+    );
+}
+
+submitNER(): void {
+  if (this.ner_value && this.ner_value.trim() !== "") {
+    console.log("Submitting NER job with value:", this.ner_value);
+
+    this.loading = true; // Start loading
+    // alert("Loading... Please wait."); // Display alert
+
+    this.activity = "ner";
+    console.log("Posting to ", this.middlewareUrl + "/submit_ner");
+    // Prepare payload to send to backend
+    const payload = { userEmail: this.currentUser.email, ner_param: this.ner_value };
+
+    // Send the job submission request
+    this.http.post(`${this.middlewareUrl}/submit_ner`, payload).subscribe(
+      (response: any) => {
+        console.log("Job submitted successfully:", response);
+        this.output_path = response.output_path;
+        this.jobId = response.id; // Assuming the response contains the job ID
+        this.jobStatus = "Job submitted, waiting for completion...";
+
+        // Now, periodically check the job status
+        this.pollJobStatus();
+      },
+      (error) => {
+        console.error("Error submitting job:", error);
+        this.jobStatus = "Failed to submit the job.";
+        this.loading = false;
+      },
+    );
+  } else {
+    console.log("Please enter a valid value.");
+    this.jobStatus = "Please enter a valid value.";
+  }
+}
+
+  // submitNER(): void {
+  //     this.loading = true; // Start loading
+  //     // alert("Loading... Please wait."); // Display alert
+
+  //     this.activity = "ner";
+  //     console.log("Posting to ", this.middlewareUrl + "/submit_ner");
+  //     // Prepare payload to send to backend
+  //     const payload = { userEmail: this.currentUser.email };
+
+  //     // Send the job submission request
+  //     this.http.post(`${this.middlewareUrl}/submit_ner`, payload).subscribe(
+  //       (response: any) => {
+  //         console.log("Job submitted successfully:", response);
+  //         this.output_path = response.output_path;
+  //         this.jobId = response.id; // Assuming the response contains the job ID
+  //         this.jobStatus = "Job submitted, waiting for completion...";
+
+  //         // Now, periodically check the job status
+  //         this.pollJobStatus();
+  //       },
+  //       (error) => {
+  //         console.error("Error submitting job:", error);
+  //         this.jobStatus = "Failed to submit the job.";
+  //         this.loading = false;
+  //       },
+  //     );
+  // }
 
   //   poll for 10s each
   pollJobStatus(): void {
@@ -454,7 +548,7 @@ drawResultVisualizations(): void {
         this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
       }
     else if(this.activity=='network'){
-      this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_table));
+      // this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_table));
       this.drawNetworkChart(JSON.stringify(this.analysisedData.result_graph));
     }
     else if(this.activity=='ngrams'){
@@ -473,6 +567,9 @@ drawResultVisualizations(): void {
     // }
     else if(this.activity=='topicLDA')
       this.drawTopicModeling(JSON.stringify(this.analysisedData.result_graph));
+    
+    else if(this.activity=='ner')
+      this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
 
     alert("분석 완료되었습니다.");
     // this.closeLoadingWithMask();

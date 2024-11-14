@@ -6,7 +6,7 @@
       <div *ngIf="loading" class="loading-modal">
         <div class="loading-content">
           <p>Loading... Please wait while your job is processed.</p>
-          <div class="spinner"></div> <!-- Optional: You can replace this with a spinner animation -->
+          <div class="spinner"></div>
         </div>
       </div>
   
@@ -18,7 +18,7 @@
           <input type="text" [(ngModel)]="displayValue" placeholder="Enter Display-Value">
           <button (click)="submitWordCount()">Submit WordCount Job</button>
         </div>
-  
+
         <!-- K-Means Analysis -->
         <div class="job-section">
           <h3>K-Means Analysis</h3>
@@ -78,23 +78,23 @@
           <h3>Hierarchical Clustering</h3>
           <label for="hcluster_param">Number of Clusters: </label>
           <input type="text" [(ngModel)]="hcluster_value" placeholder="Enter number of clusters">
-          <button (click)="submitWithArgs('/submit_hcluster', 'hcluster_param')">Submit Hierarchical Clustering</button>
+          <button (click)="submitHclustering()">Submit Hierarchical Clustering</button>
         </div>
   
         <!-- NER Analysis -->
         <div class="job-section">
           <h3>Named Entity Recognition (NER)</h3>
           <label for="ner_param">Type of entity: </label>
-          <input type="text" [(ngModel)]="ner_param" placeholder="Enter type of entity to be extracted: ">
-          <button (click)="submitWithArgs('/submit_ner', 'ner_param')">Submit NER</button>
+          <input type="text" [(ngModel)]="ner_value" placeholder="Enter type of entity to be extracted: ">
+          <button (click)="submitNER()">Submit NER</button>
         </div>
   
         <!-- Sentiment Analysis -->
-        <div class="job-section">
+        <!-- <div class="job-section">
           <h3>Sentiment Analysis</h3>
           <button (click)="submitWithArgs('/submit_sent')">Submit Sentiment Analysis</button>
         </div>
-      </div>
+      </div> End of analysis div -->
   
       <div class="results">
         <figure id="table"></figure>
@@ -105,6 +105,4 @@
         <figure id="tree"></figure>
         <figure id="ldavis"></figure>
       </div>
-    </section>
-  </div>
-  
+</div>

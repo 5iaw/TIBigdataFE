@@ -53,6 +53,7 @@ export class FileListComponent implements OnInit {
   showOptionList: boolean = false;
   showLinkStrength: boolean = false;
   showNValue: boolean = false;
+  showNERParam: boolean = false;
   currentUser: UserProfile;
 
   // File upload properties
@@ -151,6 +152,12 @@ export class FileListComponent implements OnInit {
         this.showNValue = true;
         this.showLinkStrength = true;
         break;
+      case "hc":
+        this.showOptionList = true;
+        break;
+      case "ner":
+        this.showNERParam = true;
+        break;
     }
   }
 
@@ -191,6 +198,12 @@ export class FileListComponent implements OnInit {
         analysisParams.optionList = this.optionList;
         analysisParams.n = this.nValue;
         analysisParams.linkStrength = this.linkStrength;
+        break;
+      case "hc":
+        analysisParams.optionList = this.optionList;
+        break;
+      case "ner":
+        analysisParams.nerParam = this.optionList;
         break;
     }
 

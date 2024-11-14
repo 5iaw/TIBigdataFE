@@ -64,6 +64,8 @@
       <option value="lda">LDA</option>
       <option value="sma">SMA</option>
       <option value="ngrams">N-Grams</option>
+      <option value="hc">HClustering</option>
+      <option value="ner">NER</option>
     </select>
   </div>
 
@@ -99,6 +101,11 @@
       <input type="number" [(ngModel)]="optionList" id="optionList" />
     </div>
 
+    <div *ngIf="showNERparam">
+      <label for="nerParam">NER Param:</label>
+      <input type="number" [(ngModel)]="nerParam" id="nerParam" />
+    </div>
+
     <div *ngIf="showLinkStrength">
       <label for="linkStrength">Link Strength (1-100):</label>
       <input
@@ -117,5 +124,7 @@
 
     <!-- Submit Job Button -->
     <button (click)="submitJob()">Submit Job</button>
+
+    <app-analysis></app-analysis>
   </div>
 </div>
