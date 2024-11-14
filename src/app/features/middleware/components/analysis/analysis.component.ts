@@ -38,7 +38,7 @@ export class AnalysisComponent implements OnInit {
   jobId: string | null = null;
   private currentUser: UserProfile;
 
-  private middlewareUrl = "https://localhost:10000/spark";
+  private middlewareUrl = "https://203.252.112.15:10000/spark";
   constructor(
     private authService: AuthenticationService,
     private http: HttpClient) {
