@@ -220,24 +220,34 @@ export class FileListComponent implements OnInit {
     }
 
     this.middlewareService
-      .submitAnalysis(this.selectedAnalysisType, analysisParams)
-      .subscribe(
-        (response) =>
-          response.success
-            ? console.log(
-                `${this.selectedAnalysisType} analysis job submitted successfully.`,
-                response,
-              )
-            : console.error(
-                `Failed to submit ${this.selectedAnalysisType} analysis job:`,
-                response.message,
-              ),
-        (error) =>
-          console.error(
-            `Error submitting ${this.selectedAnalysisType} analysis job:`,
-            error,
-          ),
-      );
+  .submitAnalysis(this.selectedAnalysisType, analysisParams)
+  .subscribe(
+    (response) => {
+      if (response.success) {
+        console.log(
+          `${this.selectedAnalysisType} analysis job submitted successfully.`,
+          response
+        );
+
+        // Call getAnalysisResult after successful job submission
+        console.log("calling visualization...");
+        this.output_path = response.output_path;
+        this.getAnalysisResult();
+
+      } else {
+        console.error(
+          `Failed to submit ${this.selectedAnalysisType} analysis job:`,
+          response.message
+        );
+      }
+    },
+    (error) =>
+      console.error(
+        `Error submitting ${this.selectedAnalysisType} analysis job:`,
+        error
+      )
+  );
+
   }
 
   getSelectedFiles(): string[] {
@@ -364,6 +374,7 @@ export class FileListComponent implements OnInit {
 
 
   getAnalysisResult() {
+    console.log(this.output_path)
     const url = `${this.middlewareUrl}/read_file?output_path=${encodeURIComponent(this.output_path)}`;
     console.log("Getting results from ", url);
 
