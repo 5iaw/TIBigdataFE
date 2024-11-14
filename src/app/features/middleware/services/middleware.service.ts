@@ -20,8 +20,8 @@ interface ErrorResponse {
   providedIn: "root",
 })
 export class MiddlewareService {
-  private baseUrl = "http://localhost:10000/file";
-  private analysis_url = "http://localhost:10000/input_livy";
+  private baseUrl = "https://localhost:10000/file";
+  private analysis_url = "https://localhost:10000/input_livy";
 
   constructor(private http: HttpClient) {}
 
