@@ -67,9 +67,9 @@ export class FileListComponent implements OnInit {
   customFileName: string = "";
 
   output_path: string;
-  analysisedData: any; 
+  analysisedData: any;
   activity: string;
-  private middlewareUrl = "https://203.252.112.15:10000/spark";
+  private middlewareUrl = "https://localhost:10000/spark";
 
   constructor(
     private authService: AuthenticationService,
@@ -362,19 +362,19 @@ export class FileListComponent implements OnInit {
     }
   }
 
-  
+
   getAnalysisResult() {
     const url = `${this.middlewareUrl}/read_file?output_path=${encodeURIComponent(this.output_path)}`;
     console.log("Getting results from ", url);
-  
+
     this.http.get<{ file_content: string }>(url).subscribe(
       (response) => {
         this.analysisedData = response.file_content;  // Ensure the correct data assignment
         console.log("Analysis result:", this.analysisedData);
-  
+
         this.displayValue = 0;  // Reset to default
         this.output_path = "";
-  
+
         if (this.analysisedData.result_graph) {
           console.log("Result graph:", JSON.stringify(this.analysisedData.result_graph));
           this.drawResultVisualizations();  // Call visualization if available
@@ -387,7 +387,7 @@ export class FileListComponent implements OnInit {
       }
     );
   }
-  
+
 
 
 drawResultVisualizations(): void {
