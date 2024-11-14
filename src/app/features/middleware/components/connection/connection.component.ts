@@ -54,7 +54,7 @@ export class ConnectionComponent implements OnInit {
    * @param currentAddress
    */
   setTitle(currentAddress: string) {
-    if (currentAddress === "fileupload") this.title = "File Upload";
+    if (currentAddress === "file-list") this.title = "File Upload";
     if (currentAddress === "search") this.title = "Search Menu";
     if (currentAddress === "analysis") this.title = "Analysis Menu";
   }
