@@ -1,23 +1,82 @@
-<div class="content-container">
-  <app-connection></app-connection>
-<section class="content">
-      <!-- <h1>Search Menu </h1>
-    <span class="section-info">Testing connection to ElasticSearch...</span>
-    <hr>
-    Keyword Search Input 
-    <div class="search-container">
-        <input type="text" id="keyword" placeholder="Enter keyword" class="search-input" />
-        <button onclick="onSearch()" class="search-button">Search</button>
+<!-- elasticsearch.component.html -->
+<div class="container">
+    <h1>Elasticsearch Search</h1>
+  
+    <!-- Connection Status -->
+    <div class="connection-status">
+      <p>Status: {{ connectionStatus }}</p>
+      <button (click)="testConnection()">Test Connection</button>
     </div>
-    Display search results 
-    <div id="searchResults" style="display: none;">
-        <h3>Search Results:</h3>
-        <ul id="resultList"></ul>
+  
+    <!-- Search Section -->
+    <div class="search-section">
+      <label for="keyword">Search Keyword:</label>
+      <input
+        type="text"
+        id="keyword"
+        [(ngModel)]="keyword"
+        placeholder="Enter keyword to search"
+      />
+      <button (click)="onSearch()">Search</button>
     </div>
-    Button to show alert and navigate 
-    <div id="saveButton" style="display: none;">
-        <button onclick="onSaveSelection()" class="save-button">Save Selected Files</button>
-    </div> -->
+  
+    <!-- Search Results Section -->
+    <div class="search-results" *ngIf="searchResults.length > 0">
+      <h2>Search Results</h2>
+      <ul>
+        <li *ngFor="let result of searchResults">
+          <input 
+            type="checkbox" 
+            [id]="result._id"
+            (change)="onFileSelectionChange(result, $event)"
+          />
+          <label [for]="result._id">
+            <strong>{{ result._id }}</strong> - {{ result.source?.post_title }}
+          </label>
+        </li>
+      </ul>
+    </div>
+  
+    <!-- Selected Files Section -->
+    <div class="selected-files" *ngIf="selectedFiles.length > 0">
+      <h3>Selected Files:</h3>
+      <ul>
+        <li *ngFor="let file of selectedFiles">
+          {{ file._id }}
+        </li>
+      </ul>
+      <button (click)="onSaveSelectedFiles()">Save Selected Files</button>
+    </div>
+</div>
 
-    <app-search-bar></app-search-bar>
-</section>
+<!-- Styles (optional) -->
+<style>
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .connection-status {
+    margin-bottom: 20px;
+  }
+  .search-section {
+    margin-bottom: 20px;
+  }
+  .search-results ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  .search-results li {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #f4f4f4;
+    border: 1px solid #ccc;
+  }
+  .selected-files {
+    margin-top: 20px;
+  }
+  button {
+    padding: 5px 10px;
+    margin-top: 10px;
+  }
+</style>
