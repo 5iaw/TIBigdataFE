@@ -1,6 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router  } from "@angular/router";
+import { UserProfile } from "src/app/core/models/user.model";
+import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
+
+function encodeEmail(email: string): string {
+  return btoa(email).replace(/=/g, "");
+}
 
 @Component({
   selector: 'app-elasticsearch',
@@ -11,12 +17,25 @@ export class ElasticSearchComponent implements OnInit {
   searchResults: any[] = [];  // Holds the search results
   selectedFiles: any[] = [];  // Holds selected files
 
+  currentPath = "";
+  owner = "";
+  private currentUser: UserProfile;
+
   searchQuery: string;
   connectionStatus: string = 'Checking connection...';
   private EsUrl = 'http://localhost:10000/es';  // Flask backend URL
   private AnalysisUrl = 'http://localhost:10000/spark';
 
-  constructor(private http: HttpClient, private router: Router) {}
+  private middlewareUrl = "http://localhost:10000/spark";
+  constructor(
+    private authService: AuthenticationService, private router: Router,
+    private http: HttpClient) {
+      this.authService.getCurrentUserChange().subscribe((user) => {
+        this.currentUser = user;
+        this.owner = encodeEmail(this.currentUser.email); // Encode email only once and set as owner
+        this.currentPath = `/users/${this.owner}/input_files/`; // Set initial path
+      });
+    }
 
   ngOnInit(): void {
     // Initialization logic if needed
@@ -64,7 +83,7 @@ export class ElasticSearchComponent implements OnInit {
   onFileSelectionChange(file: any, event: any): void {
     if (event.target.checked) {
       // Add file to selected files if checked
-      this.selectedFiles.push(file._id);
+      this.selectedFiles.push(file);
     } else {
       // Remove file from selected files if unchecked
       this.selectedFiles = this.selectedFiles.filter(selectedFile => selectedFile._id !== file._id);
@@ -74,7 +93,16 @@ export class ElasticSearchComponent implements OnInit {
   // Save selected files (triggered when 'Save Selected Files' button is clicked)
   onSaveSelectedFiles(): void {
     if (this.selectedFiles.length > 0) {
-      const payload = { fileIds: this.selectedFiles };
+      const payload = { 
+        path: this.currentPath,
+        files: this.selectedFiles.map(file => ({ 
+          id: file._id, 
+          content: file.source?.post_body // Include file content 
+        })) 
+      };
+      console.log("Sending payload to Flask:", payload);
+      
+      // const payload = { files: this.selectedFiles };
   
       // Send file IDs to Flask middleware
       this.http.post(`${this.AnalysisUrl}/input-files`, payload).subscribe(

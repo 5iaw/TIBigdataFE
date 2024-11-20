@@ -31,7 +31,7 @@
             (change)="onFileSelectionChange(result, $event)"
           />
           <label [for]="result._id">
-            <strong>{{ result._id }}</strong> - {{ result.source?.post_title }}
+            <strong>{{ result.source?.post_title }}</strong> - {{ result.source?.post_writer }}
           </label>
         </li>
       </ul>
@@ -42,10 +42,10 @@
       <h3>Selected Files:</h3>
       <ul>
         <li *ngFor="let file of selectedFiles">
-          {{ file._id }}
+          {{ file.source?.post_title }}
         </li>
       </ul>
-      <button (click)="onSaveSelectedFiles()">Save Selected Files</button>
+      <button (click)="onSaveSelectedFiles()">Go To Analysis</button>
     </div>
 </div>
 

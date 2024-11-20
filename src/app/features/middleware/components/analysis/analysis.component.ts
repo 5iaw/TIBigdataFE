@@ -1,6 +1,8 @@
 import { assertPlatform, Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 // import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from "@angular/router";
+import { MiddlewareService } from "../../services/middleware.service";
 
 import { interval } from "rxjs";
 import { concatMap, takeWhile, switchMap, delay } from "rxjs/operators";
@@ -12,6 +14,12 @@ import * as lda from "../file-list/ldavis.v3.0.0.js";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { UserProfile } from "src/app/core/models/user.model";
 import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
+import { FileSystemEntity } from "../../models/FileSystemEntity.model";
+
+
+function encodeEmail(email: string): string {
+  return btoa(email).replace(/=/g, "");
+}
 
 @Component({
   selector: "app-analysis",
@@ -31,6 +39,9 @@ export class AnalysisComponent implements OnInit {
   ngrams_param: string = "";
   hcluster_value: string = "";
   ner_value: string = "";
+  currentPath = "";
+  fileList: string [];
+  owner = "";
 
   activity: string = "";
   analysisedData: any;
@@ -38,13 +49,17 @@ export class AnalysisComponent implements OnInit {
   jobId: string | null = null;
   private currentUser: UserProfile;
 
-  private middlewareUrl = "https://localhost:10000/spark";
-  constructor(
-    private authService: AuthenticationService,
-    private http: HttpClient) {
-      this.authService.getCurrentUserChange().subscribe((currentUser) => {
-        this.currentUser = currentUser;
+  selectedFiles: string[] = [];
 
+  private middlewareUrl = "http://localhost:10000/spark";
+  constructor(
+    private authService: AuthenticationService, private route: ActivatedRoute, 
+    private middlewareService: MiddlewareService,
+    private http: HttpClient) {
+      this.authService.getCurrentUserChange().subscribe((user) => {
+        this.currentUser = user;
+        this.owner = encodeEmail(this.currentUser.email); // Encode email only once and set as owner
+        this.currentPath = `/users/${this.owner}`; // Set initial path
       });
     }
 
@@ -56,7 +71,8 @@ export class AnalysisComponent implements OnInit {
   results: string | null = null;
 
   ngOnInit(): void {
-    this.testConnection(); // Check connection to middleware on initialization
+    // Retrieve selected file IDs from query parameters
+    
   }
 
   testConnection(): void {
@@ -73,21 +89,190 @@ export class AnalysisComponent implements OnInit {
     );
   }
 
-  //   private initialInterval: number = 30000; // 30 seconds for the first poll
-  //   private subsequentInterval: number = 3000; // 3 seconds for subsequent polls
-  //   private currentInterval: number = this.initialInterval; // Start with the initial interval
-
-  //   submitWordCount(displayValue: string) {
-  //     const payload = { display_value: displayValue };
-
-  //     // Step 1: Submit the job and get the job ID
-  //     this.http.post<{ job_id: string }>('{this.apiUrl}/submit_wordcount', payload)
-  //       .subscribe(response => {
-  //         this.jobId = response.job_id;
-  //         this.jobStatus = 'Job submitted, waiting for completion...';
-  //         this.pollJobStatus();  // Start polling for job status
-  //       });
+  // submitJob(): void {
+  //   const selectedFileIds = this.selectedFiles;
+  //   if (selectedFileIds.length === 0) {
+  //     console.error("No files selected for analysis.");
+  //     return;
   //   }
+
+  //   const analysisParams: any = {
+  //     owner: this.currentUser.email,
+  //     input_file_ids: selectedFileIds,
+  //     parent_path: this.currentPath,
+  //   };
+
+  //   switch (this.selectedAnalysisType) {
+  //     case "wordcount":
+  //       analysisParams.display_value = this.displayValue;
+  //       break;
+  //     case "kmeans":
+  //       analysisParams.k_value = this.kValue;
+  //       break;
+  //     case "w2v":
+  //       analysisParams.w2v_param = this.w2vParam;
+  //       break;
+  //     case "tfidf":
+  //       analysisParams.tfidf_param = this.tfidfParam;
+  //       break;
+  //     case "lda":
+  //       analysisParams.lda_param = this.ldaParam;
+  //       break;
+  //     case "sma":
+  //       analysisParams.optionList = this.optionList;
+  //       analysisParams.linkStrength = this.linkStrength;
+  //       break;
+  //     case "ngrams":
+  //       analysisParams.optionList = this.optionList;
+  //       analysisParams.n = this.nValue;
+  //       analysisParams.linkStrength = this.linkStrength;
+  //       break;
+  //     case "hc":
+  //       analysisParams.optionList = this.optionList;
+  //       break;
+  //     case "ner":
+  //       analysisParams.nerParam = this.optionList;
+  //       break;
+  //   }
+
+  //   this.middlewareService
+  //     .submitAnalysis(this.selectedAnalysisType, analysisParams)
+  //     .subscribe(
+  //       (response) => {
+  //         if (response.success) {
+  //           console.log(
+  //             `${this.selectedAnalysisType} analysis job submitted successfully.`,
+  //             response,
+  //           );
+
+  //           // Call getAnalysisResult after successful job submission
+  //           console.log("calling visualization...");
+  //           this.output_path = response.output_path;
+  //         } else {
+  //           console.error(
+  //             `Failed to submit ${this.selectedAnalysisType} analysis job:`,
+  //             response.message,
+  //           );
+  //         }
+  //       },
+  //       (error) =>
+  //         console.error(
+  //           `Error submitting ${this.selectedAnalysisType} analysis job:`,
+  //           error,
+  //         ),
+  //     );
+  // }
+
+  // submitWordCount(): void {
+  //   if (this.displayValue && this.displayValue.trim() !== "") {
+
+  //     console.log("Posting to ", this.middlewareUrl + "/submit_wordcount");
+  //     // Prepare payload to send to backend
+  //     const payload = { userEmail: this.currentUser.email, input_file_ids: this.selectedFiles, display_value: this.displayValue };
+  //     console.log("Submitting WordCount job with value:", payload);
+
+  //     this.loading = true; // Start loading
+  //     // alert("Loading... Please wait."); // Display alert
+
+  //     this.activity = "count";
+  //     // Send the job submission request
+  //     this.http
+  //       .post(`${this.middlewareUrl}/submit_wordcount`, payload)
+  //       .subscribe(
+  //         (response: any) => {
+  //           console.log("Job submitted successfully:", response);
+  //           this.output_path = response.output_path;
+  //           this.jobId = response.id; // Assuming the response contains the job ID
+  //           this.jobStatus = "Job submitted, waiting for completion...";
+
+  //           // Now, periodically check the job status
+  //           this.pollJobStatus();
+  //         },
+  //         (error) => {
+  //           console.error("Error submitting job:", error);
+  //           this.jobStatus = "Failed to submit the job.";
+  //           this.loading = false;
+  //         },
+  //       );
+  //   } else {
+  //     console.log("Please enter a valid display value.");
+  //     this.jobStatus = "Please enter a valid display value.";
+  //   }
+  // }
+
+  submitJob(selectedAnalysisType): void {
+    const selectedFileIds = this.selectedFiles;
+    if (selectedFileIds.length === 0) {
+      console.error("No files selected for analysis.");
+      return;
+    }
+
+    const analysisParams: any = {
+      owner: this.owner,
+      input_file_ids: selectedFileIds,
+      parent_path: this.currentPath,
+    };
+
+    switch (selectedAnalysisType) {
+      case "wordcount":
+        analysisParams.display_value = this.displayValue;
+        break;
+      case "kmeans":
+        analysisParams.k_value = this.k_value;
+        break;
+      case "w2v":
+        analysisParams.w2v_param = this.w2v_value;
+        break;
+      case "tfidf":
+        analysisParams.tfidf_param = this.tfidf_value;
+        break;
+      case "lda":
+        analysisParams.lda_param = this.lda_value;
+        break;
+      case "sma":
+        analysisParams.optionList = this.sma_wordsnum;
+        analysisParams.linkStrength = this.sma_ls;
+        break;
+      case "ngrams":
+        analysisParams.optionList = this.ngrams_param;
+        analysisParams.n = this.ngrams_value;
+        analysisParams.linkStrength = this.ngrams_ls;
+        break;
+      case "hc":
+        analysisParams.optionList = this.hcluster_value;
+        break;
+      case "ner":
+        analysisParams.nerParam = this.ner_value;
+        break;
+    }
+
+    this.middlewareService
+      .submitAnalysis(selectedAnalysisType, analysisParams)
+      .subscribe(
+        (response) => {
+          if (response.success) {
+            console.log(
+              `${selectedAnalysisType} analysis job submitted successfully.`,
+              response,
+            );
+
+            // Call getAnalysisResult after successful job submission
+            console.log("calling visualization...");
+            this.output_path = response.output_path;
+          } else {
+            console.error(
+              `Failed to submit ${selectedAnalysisType} analysis job:`,
+              response.message,
+            );
+          }
+        },
+        (error) =>
+          console.error(
+            `Error submitting ${selectedAnalysisType} analysis job:`,
+            error,
+          ),
+      );
+  }
 
   submitWordCount(): void {
     if (this.displayValue && this.displayValue.trim() !== "") {
