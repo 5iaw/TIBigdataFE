@@ -10,6 +10,8 @@ h1 {
   text-align: end;
   display: inline-block;
   margin-bottom: 20px;
+  font-weight: 700;
+  font-size: larger;
 }
 
 .sidebar-container {
@@ -182,15 +184,16 @@ app-connection {
     border-radius: 4px;
     box-sizing: border-box;
 }
-.search-button {
-    padding: 10px 20px;
-    font-size: 16px;
+button {
+    padding: 5px 10px;
+    font-size: 9px;
     color: #ffffff;
-    background-color: #007bff;
+    background-color: #71bfff;
     border: none;
     border-radius: 4px;
-    cursor: pointer;
+    cursor: pointer; 
     transition: background-color 0.3s;
+    margin-bottom: 20px; 
 }
 .search-button:hover {
     background-color: #0056b3;
@@ -277,4 +280,56 @@ app-connection {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+// button {
+//   background-color: #007BFF; /* Blue background */
+//   color: white; /* White text */
+//   padding: 12px 24px; /* Top & bottom, left & right padding */
+//   font-size: 16px; /* Text size */
+//   font-weight: bold; /* Bold text */
+//   border-radius: 8px; /* Rounded corners */
+//   border: none; /* Remove default border */
+//   cursor: pointer; /* Pointer cursor on hover */
+//   transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+// }
+
+button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+  transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
+
+button:active {
+  background-color: #003f8e; /* Even darker blue when clicked */
+}
+
+label {
+  font-size: 14px;
+  // font-weight: bold;
+  margin-right: 10px;
+}
+
+.pagination button {
+  background-color: #d8d9da;
+  color: white;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  padding-left: 8px;
+  padding-right: 8px;
+  margin: 2px;
+}
+
+span {
+  margin: 10px;
+}
+
+.custom-checkbox{
+  margin-right: 10px;
+}
+
+input {
+  width: 200px;
+  margin: 5px;
 }

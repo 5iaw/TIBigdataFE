@@ -1,82 +1,46 @@
-<!-- elasticsearch.component.html -->
-<div class="container">
-    <h1>Elasticsearch Search</h1>
-  
-    <!-- Connection Status -->
-    <div class="connection-status">
-      <p>Status: {{ connectionStatus }}</p>
-      <button (click)="testConnection()">Test Connection</button>
-    </div>
-  
-    <!-- Search Section -->
-    <div class="search-section">
-      <label for="keyword">Search Keyword:</label>
-      <input
-        type="text"
-        id="keyword"
-        [(ngModel)]="keyword"
-        placeholder="Enter keyword to search"
-      />
-      <button (click)="onSearch()">Search</button>
-    </div>
-  
-    <!-- Search Results Section -->
-    <div class="search-results" *ngIf="searchResults.length > 0">
-      <h2>Search Results</h2>
-      <ul>
-        <li *ngFor="let result of searchResults">
-          <input 
-            type="checkbox" 
-            [id]="result._id"
-            (change)="onFileSelectionChange(result, $event)"
-          />
-          <label [for]="result._id">
-            <strong>{{ result.source?.post_title }}</strong> - {{ result.source?.post_writer }}
-          </label>
-        </li>
-      </ul>
-    </div>
-  
-    <!-- Selected Files Section -->
-    <div class="selected-files" *ngIf="selectedFiles.length > 0">
-      <h3>Selected Files:</h3>
-      <ul>
-        <li *ngFor="let file of selectedFiles">
-          {{ file.source?.post_title }}
-        </li>
-      </ul>
-      <button (click)="onSaveSelectedFiles()">Go To Analysis</button>
-    </div>
-</div>
+<div class="content-container">
+    <app-connection></app-connection>
+    <section class="content">
+        <h1>Search Menu</h1>
 
-<!-- Styles (optional) -->
-<style>
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  .connection-status {
-    margin-bottom: 20px;
-  }
-  .search-section {
-    margin-bottom: 20px;
-  }
-  .search-results ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  .search-results li {
-    margin-bottom: 10px;
-    padding: 10px;
-    background: #f4f4f4;
-    border: 1px solid #ccc;
-  }
-  .selected-files {
-    margin-top: 20px;
-  }
-  button {
-    padding: 5px 10px;
-    margin-top: 10px;
-  }
-</style>
+        <!-- Search Section -->
+        <div class="search-section">
+            <label for="keyword" class="search-keyword"><b>Search Keyword:</b></label>
+            <input type="text" id="keyword" [(ngModel)]="keyword" placeholder="Enter keyword to search" />
+            <button (click)="onSearch()">Search</button>
+        </div>
+
+        <!-- Search Results Section -->
+        <div class="search-results" *ngIf="searchResults.length > 0">
+            <h3><strong>Search Results</strong></h3>
+            
+            <!-- Display limited number of results per page -->
+            <ul>
+                <li *ngFor="let result of pagedResults">
+                    <input type="checkbox" class="custom-checkbox" [id]="result._id" (change)="onFileSelectionChange(result, $event)" />
+                    <label [for]="result._id">
+                        <b>{{ result.source?.post_title }}</b> - {{ result.source?.post_writer }}
+                    </label>
+                </li>
+            </ul>
+            
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8592;</button>
+                <span>Page {{ currentPage }} of {{ totalPages }}</span>
+                <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8594;</button>
+            </div>
+        </div>
+
+        <!-- Selected Files Section -->
+        <div class="selected-files" *ngIf="selectedFiles.length > 0">
+            <br><h3><b>Selected Files</b></h3>
+            <ul>
+                <li *ngFor="let file of selectedFiles">
+                    <small><italic>{{ file.source?.post_title }} </italic></small>
+                </li>
+            </ul>
+            <button (click)="onSaveSelectedFiles()">Go To Analysis</button>
+        </div>
+    </section>
+</div>

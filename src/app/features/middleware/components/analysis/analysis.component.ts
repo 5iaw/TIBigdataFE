@@ -602,6 +602,9 @@ submitNER(): void {
     this.jobStatus = "Please enter a valid value.";
   }
 }
+submitSentiment(): void {
+  
+}
 
   // submitNER(): void {
   //     this.loading = true; // Start loading
