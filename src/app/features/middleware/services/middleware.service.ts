@@ -20,9 +20,11 @@ interface ErrorResponse {
   providedIn: "root",
 })
 export class MiddlewareService {
-  private baseUrl = "http://localhost:10000/file";
-  private analysis_url = "http://localhost:10000/input_livy";
+  // private baseUrl = "http://localhost:10000/file";
+  // private analysis_url = "http://localhost:10000/input_livy";
 
+  private baseUrl = "https://203.252.112.15:10000/file";
+  private analysis_url = "https://203.252.112.15:10000/input_livy";
   constructor(private http: HttpClient) {}
 
   // Get files and folders in a specific path
