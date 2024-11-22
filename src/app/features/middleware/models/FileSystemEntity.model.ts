@@ -1,4 +1,3 @@
-// middleware/models/FileSystemEntity.ts
 export class FileSystemEntity {
   id: string;
   name: string;
@@ -8,8 +7,10 @@ export class FileSystemEntity {
   createdAt: Date;
   updatedAt: Date;
   type: "file" | "folder";
-
-  selected: boolean = false;
+  is_analysis_result: boolean = false;
+  analysis_result_type?: string;
+  hdfsFilePath?: string; // Add this property
+  selected: boolean = false; // Add this property
 
   constructor(data: Partial<FileSystemEntity> = {}) {
     this.id = data.id || "";
@@ -20,5 +21,9 @@ export class FileSystemEntity {
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
     this.type = data.type || "file";
+    this.is_analysis_result = data.is_analysis_result || false;
+    this.analysis_result_type = data.analysis_result_type || null;
+    this.hdfsFilePath = data.hdfsFilePath || null; // Initialize
+    this.selected = data.selected || false; // Initialize
   }
 }

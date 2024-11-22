@@ -42,6 +42,10 @@ export class MiddlewareService {
       .pipe(
         map((response) => {
           if (response.success && response.contents) {
+            console.log(
+              "Received folder contents from backend:",
+              response.contents,
+            ); // Debug log
             return response.contents.map(
               (item) =>
                 new FileSystemEntity({
@@ -49,18 +53,21 @@ export class MiddlewareService {
                   name: item.name,
                   path: item.path,
                   parentPath: item.parent_path,
+                  hdfsFilePath: item.hdfs_file_path,
                   owner: owner,
                   createdAt: new Date(item.created_at),
                   updatedAt: new Date(item.updated_at),
                   type: item.type,
+                  is_analysis_result: item.is_analysis_result || false,
+                  analysis_result_type: item.analysis_result_type || null,
                 }),
             );
           }
-          return []; // Return empty array if no contents
+          return [];
         }),
         catchError((error) => {
           console.error("Error loading folder contents:", error);
-          return of([]); // Return empty array on error
+          return of([]);
         }),
       );
   }

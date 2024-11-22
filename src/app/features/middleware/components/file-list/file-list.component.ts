@@ -1,3 +1,4 @@
+// file-list.component
 import { Component, OnInit } from "@angular/core";
 import { UserProfile } from "src/app/core/models/user.model";
 import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
@@ -69,6 +70,9 @@ export class FileListComponent implements OnInit {
   output_path: string;
   analysisedData: any;
   activity: string;
+  selectedAnalysisData: any = null;
+  selectedAnalysisFileName: string = "";
+
   private middlewareUrl = "https://localhost:10000/spark";
 
   constructor(
@@ -76,29 +80,108 @@ export class FileListComponent implements OnInit {
     private middlewareService: MiddlewareService,
     private http: HttpClient,
   ) {
+    console.log("FileListComponent constructor called.");
     this.authService.getCurrentUserChange().subscribe((user) => {
+      console.log("User fetched:", user);
       this.currentUser = user;
       this.owner = encodeEmail(this.currentUser.email); // Encode email only once and set as owner
+      console.log("Owner set to:", this.owner);
       this.currentPath = `/users/${this.owner}`; // Set initial path
+      console.log("Initial path set to:", this.currentPath);
     });
   }
 
   ngOnInit(): void {
+    console.log("FileListComponent ngOnInit called.");
     this.loadFolderContents();
   }
 
+  // Function to fetch and display analysis result
+  viewAnalysisResult(file: FileSystemEntity): void {
+    if (!file.is_analysis_result) {
+      console.error("This file does not contain analysis results.");
+      return;
+    }
+
+    if (!file.analysis_result_type) {
+      console.error("Analysis type is missing for this file.");
+      return;
+    }
+
+    console.log(file.is_analysis_result);
+    console.log(file.analysis_result_type);
+    console.log(file.hdfsFilePath);
+    // Fetch the analysis result data
+    const params = new HttpParams()
+      .set("owner", file.owner)
+      .set("output_path", file.hdfsFilePath || "");
+
+    this.middlewareService.getAnalysisResult(params).subscribe(
+      (response) => {
+        if (response.success) {
+          this.selectedAnalysisData = response.file_content;
+          this.selectedAnalysisFileName = file.name;
+          console.log(
+            "Analysis result fetched successfully:",
+            response.file_content,
+          );
+          console.log(
+            `Rendering visualization for ${file.analysis_result_type}`,
+          );
+
+          // Call the appropriate visualization method based on analysis type
+          switch (file.analysis_result_type) {
+            case "wordcount":
+              this.drawBarChart(JSON.stringify(this.selectedAnalysisData));
+              break;
+            case "kmeans":
+              this.drawScatterChart(JSON.stringify(this.selectedAnalysisData));
+              break;
+            case "network":
+              this.drawNetworkChart(this.selectedAnalysisData);
+              break;
+            case "ngrams":
+              this.drawNetworkChart(this.selectedAnalysisData);
+              break;
+            case "hc":
+              this.drawTreeChart(this.selectedAnalysisData);
+              break;
+            case "lda":
+              this.drawTopicModeling(this.selectedAnalysisData);
+              break;
+            default:
+              console.error("Unsupported analysis type.");
+          }
+        } else {
+          console.error("Failed to fetch analysis result:", response.message);
+        }
+      },
+      (error) => {
+        console.error("Error fetching analysis result:", error);
+      },
+    );
+  }
   loadFolderContents(): void {
+    console.log("Loading folder contents for path:", this.currentPath);
     this.middlewareService.getFileList(this.owner, this.currentPath).subscribe(
-      (files) => (this.fileList = files),
-      (error) => console.error("Error loading folder contents:", error),
+      (files) => {
+        console.log("Files loaded successfully:", files);
+        this.fileList = files;
+      },
+      (error) => {
+        console.error("Error loading folder contents:", error);
+      },
     );
   }
 
   onFileSelected(event: Event): void {
+    console.log("File selected event triggered:", event);
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
       this.customFileName = this.selectedFile.name.split(".")[0]; // Set default name without extension
+      console.log("Selected file:", this.selectedFile);
+      console.log("Custom file name set to:", this.customFileName);
     }
   }
 
@@ -107,11 +190,12 @@ export class FileListComponent implements OnInit {
       const fileName =
         this.customFileName.trim().replace(/\s+/g, "_") +
         this.getFileExtension(this.selectedFile.name);
+      console.log("Uploading file with name:", fileName);
       this.middlewareService
         .uploadFile(this.owner, this.currentPath, this.selectedFile, fileName)
         .subscribe(
           (response) => {
-            console.log("File uploaded successfully");
+            console.log("File uploaded successfully:", response);
             this.loadFolderContents();
           },
           (error) => {
@@ -274,7 +358,7 @@ export class FileListComponent implements OnInit {
   getAnalysisResult(file: FileSystemEntity, analysisType: string): void {
     const params = new HttpParams()
       .set("owner", file.owner)
-      .set("output_path", file.path);
+      .set("output_path", file.hdfsFilePath);
 
     this.middlewareService.getAnalysisResult(params).subscribe(
       (response) => {
@@ -334,16 +418,26 @@ export class FileListComponent implements OnInit {
   navigateUp(): void {
     if (this.currentPath !== `/users/${this.owner}`) {
       const lastSlashIndex = this.currentPath.lastIndexOf("/");
-      this.currentPath =
+      const previousPath =
         this.currentPath.substring(0, lastSlashIndex) || `/users/${this.owner}`;
+      console.log("Navigating up from:", this.currentPath, "to:", previousPath);
+      this.currentPath = previousPath;
       this.loadFolderContents();
     }
   }
 
   navigateToFolder(folder: FileSystemEntity): void {
     if (folder.type === "folder") {
+      console.log(
+        "Navigating to folder:",
+        folder.name,
+        "at path:",
+        folder.path,
+      );
       this.currentPath = folder.path;
       this.loadFolderContents();
+    } else {
+      console.error("Attempted to navigate to a non-folder entity:", folder);
     }
   }
 
@@ -783,7 +877,6 @@ export class FileListComponent implements OnInit {
     let margin = { top: 10, right: 30, bottom: 30, left: 60 };
     let width = 750 - margin.left - margin.right;
     let height = 750 - margin.top - margin.bottom;
-
     function zoom(svg) {
       const extent: [[number, number], [number, number]] = [
         [margin.left, margin.top],
