@@ -51,7 +51,7 @@ export class AnalysisComponent implements OnInit {
 
   selectedFiles: string[] = [];
 
-  private middlewareUrl = "http://localhost:10000/spark";
+  private middlewareUrl = "http://localhost:15050/spark";
   constructor(
     private authService: AuthenticationService, private route: ActivatedRoute, 
     private middlewareService: MiddlewareService,
@@ -734,6 +734,7 @@ drawResultVisualizations(): void {
     if (this.activity === 'count' || this.activity === 'tfidf') {
         this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
         this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
+        this.drawNERTable(JSON.stringify(this.analysisedData.result_graph));
       }
     else if(this.activity=='network'){
       // this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_table));
@@ -757,7 +758,7 @@ drawResultVisualizations(): void {
       this.drawTopicModeling(JSON.stringify(this.analysisedData.result_graph));
 
     else if(this.activity=='ner')
-      this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
+      this.drawNERTable(JSON.stringify(this.analysisedData.result_graph));
 
     alert("분석 완료되었습니다.");
     // this.closeLoadingWithMask();
@@ -792,6 +793,55 @@ drawResultVisualizations(): void {
   //   alert("분석 완료되었습니다.");
   //   // this.closeLoadingWithMask();
   // }
+
+   drawNERTable(data_str) {
+    // Parse the data string into a JavaScript object
+    // let data = JSON.parse(data_str);
+
+    let data = [
+      { "text": "대통령은", "pos": "NOUN", "dep": "dislocated" },
+      { "text": "제1항과", "pos": "PART", "dep": "advcl" },
+      { "text": "제2항의", "pos": "PART", "dep": "nsubj" },
+      { "text": "처분", "pos": "NOUN", "dep": "obj" }
+    ];
+
+    // Create the table structure inside a figure with id 'table'
+    const table = d3.select("figure#table")
+        .attr('class', 'result-pretable')
+        .append("table")
+        .attr('width', '100%')
+        .attr('height', '300px');
+
+    // Table header
+    const th = table.append("tr")
+        .style('padding', '15px 0px')
+        .style('font-weight', '500')
+        .style('text-align', 'center');
+
+    // Adding column headers for word, POS
+    th.append('th').text('No');
+    th.append('th').text('단어'); // "Word"
+    th.append('th').text('품사'); // "Part of Speech"
+
+    // Table body
+    const tbody = table.append("tbody")
+        .style('text-align', 'center');
+
+    // Loop through the data and create rows for each entity
+    for (let i = 0; i < data.length; i++) {
+        const tr = tbody.append("tr");
+
+        // Add index column
+        tr.append("td").text(i + 1);
+
+        // Add word column
+        tr.append("td").text(data[i]['text']);
+
+        // Add part of speech (POS) column
+        tr.append("td").text(data[i]['pos']);
+    }
+  }
+
 
   drawTable(analType:string, data_str:string){
     let data:any = JSON.parse(data_str);

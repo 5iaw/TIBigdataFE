@@ -24,10 +24,10 @@ export class ElasticSearchComponent implements OnInit {
 
   searchQuery: string;
   connectionStatus: string = 'Checking connection...';
-  private EsUrl = 'http://localhost:10000/es';  // Flask backend URL
-  private AnalysisUrl = 'http://localhost:10000/spark';
+  private EsUrl = 'http://localhost:15050/es';  // Flask backend URL
+  private AnalysisUrl = 'http://localhost:15050/spark';
 
-  private middlewareUrl = "http://localhost:10000/spark";
+  private middlewareUrl = "http://localhost:15050/spark";
 
   // Pagination variables
   currentPage: number = 1;
@@ -52,7 +52,9 @@ export class ElasticSearchComponent implements OnInit {
   // Test connection to Elasticsearch
   testConnection(): void {
     const testUrl = `${this.EsUrl}/connTest`;  // Flask test endpoint
-    this.http.get(testUrl).subscribe(
+    const headers = { 'Content-Type': 'application/json' };
+
+    this.http.get(testUrl, { headers }).subscribe(
       (response) => {
         console.log('Connection to Elasticsearch successful:', response);
         this.connectionStatus = 'Connected to Elasticsearch';
@@ -62,32 +64,35 @@ export class ElasticSearchComponent implements OnInit {
         this.connectionStatus = 'Failed to connect to Elasticsearch';
       }
     );
-  }
+}
+
 
   // Perform search query with the keyword
   onSearch(): void {
     if (this.keyword.trim()) {
-      const searchUrl = `${this.EsUrl}/esQuery`;  // Flask search endpoint
-      const requestBody = { keyword: this.keyword };  // Request payload
+        const searchUrl = `${this.EsUrl}/esQuery`;  // Flask search endpoint
+        const requestBody = { keyword: this.keyword };  // Request payload
+        const headers = { 'Content-Type': 'application/json' };  // Explicitly defining headers
 
-      this.http.post<any>(searchUrl, requestBody).subscribe(
-        (response) => {
-          if (response.results) {
-            this.searchResults = response.results;  // Store the search results
-            this.totalPages = Math.ceil(this.searchResults.length / this.resultsPerPage);  // Calculate total pages
-            this.paginateResults();  // Paginate results
-            console.log('Search results:', this.searchResults);
-          } else {
-            console.error('No results found.');
-          }
-        },
-        (error) => {
-          console.error('Search failed:', error);
-          alert('Failed to retrieve search results.');
-        }
-      );
+        this.http.post<any>(searchUrl, requestBody, { headers }).subscribe(
+            (response) => {
+                if (response.results) {
+                    this.searchResults = response.results;  // Store the search results
+                    this.totalPages = Math.ceil(this.searchResults.length / this.resultsPerPage);  // Calculate total pages
+                    this.paginateResults();  // Paginate results
+                    console.log('Search results:', this.searchResults);
+                } else {
+                    console.error('No results found.');
+                }
+            },
+            (error) => {
+                console.error('Search failed:', error);
+                alert('Failed to retrieve search results.');
+            }
+        );
     }
-  }
+}
+
 
   // Paginate the search results for the current page
   paginateResults(): void {

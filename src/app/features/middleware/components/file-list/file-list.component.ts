@@ -73,7 +73,7 @@ export class FileListComponent implements OnInit {
   selectedAnalysisData: any = null;
   selectedAnalysisFileName: string = "";
 
-  private middlewareUrl = "https://localhost:10000/spark";
+  private middlewareUrl = "https://localhost:15050/spark";
 
   constructor(
     private authService: AuthenticationService,

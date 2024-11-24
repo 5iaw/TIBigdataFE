@@ -14,8 +14,8 @@ export class MiddlewareService {
   // private baseUrl = "http://localhost:10000/file";
   // private analysis_url = "http://localhost:10000/input_livy";
   // Backend API endpoints
-  private baseUrl = "https://kubic.handong.edu:15051/file";
-  private analysis_url = "https://kubic.handong.edu:15051/input_livy";
+  private baseUrl = "https://kubic.handong.edu:15050/file";
+  private analysis_url = "https://kubic.handong.edu:15050/input_livy";
 
   constructor(private http: HttpClient) {}
 
