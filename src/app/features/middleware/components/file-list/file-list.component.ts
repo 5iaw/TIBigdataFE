@@ -12,6 +12,7 @@ import { Tooltip } from "chart.js";
 // import * as lda from "./ldavis.v3.0.0.js";
 import * as lda from "../analysis/ldavis.v3.0.0.js";
 import { HttpClient, HttpParams } from "@angular/common/http";
+import { IpService } from "src/app/core/services/ip-service/ip.service";
 
 interface SuccessResponse {
   success: true;
@@ -73,9 +74,10 @@ export class FileListComponent implements OnInit {
   selectedAnalysisData: any = null;
   selectedAnalysisFileName: string = "";
 
-  private middlewareUrl = "https://localhost:15050/spark";
+  private middlewareUrl = this.ipService.getMiddlewareServerIp() + "/spark";
 
   constructor(
+    private ipService: IpService,
     private authService: AuthenticationService,
     private middlewareService: MiddlewareService,
     private http: HttpClient,

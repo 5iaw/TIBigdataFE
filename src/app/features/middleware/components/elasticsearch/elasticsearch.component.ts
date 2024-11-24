@@ -4,6 +4,7 @@ import { Router } from "@angular/router";
 import { UserProfile } from "src/app/core/models/user.model";
 import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
 
+import { IpService } from "src/app/core/services/ip-service/ip.service";
 function encodeEmail(email: string): string {
   return btoa(email).replace(/=/g, "");
 }
@@ -24,8 +25,10 @@ export class ElasticSearchComponent implements OnInit {
 
   searchQuery: string;
   connectionStatus: string = 'Checking connection...';
-  private EsUrl = 'http://localhost:15050/es';  // Flask backend URL
-  private AnalysisUrl = 'http://localhost:15050/spark';
+  private EsUrl = this.ipService.getMiddlewareServerIp() + "/es";  // Flask backend URL
+  // private AnalysisUrl = 'http://localhost:15050/spark';
+
+  private AnalysisUrl = this.ipService.getMiddlewareServerIp() + "/spark";
 
   private middlewareUrl = "http://localhost:15050/spark";
 
@@ -36,6 +39,7 @@ export class ElasticSearchComponent implements OnInit {
   totalPages: number = 1;  // Total pages for pagination
 
   constructor(
+    private ipService: IpService,
     private authService: AuthenticationService, private router: Router,
     private http: HttpClient) {
       this.authService.getCurrentUserChange().subscribe((user) => {

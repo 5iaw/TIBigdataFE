@@ -5,6 +5,7 @@ import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
 import { Observable, of } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 import { FileSystemEntity } from "../models/FileSystemEntity.model";
+import { IpService } from "src/app/core/services/ip-service/ip.service";
 
 @Injectable({
   providedIn: "root",
@@ -14,10 +15,12 @@ export class MiddlewareService {
   // private baseUrl = "http://localhost:10000/file";
   // private analysis_url = "http://localhost:10000/input_livy";
   // Backend API endpoints
-  private baseUrl = "https://kubic.handong.edu:15050/file";
-  private analysis_url = "https://kubic.handong.edu:15050/input_livy";
+  private baseUrl = this.ipService.getMiddlewareServerIp() + "/file";
+  private analysis_url = this.ipService.getMiddlewareServerIp() + "/input_livy";
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private ipService: IpService,
+    private http: HttpClient) {}
 
   // Get files and folders in a specific path
   getFileList(owner: string, folderPath: string): Observable<FileSystemEntity[]> {

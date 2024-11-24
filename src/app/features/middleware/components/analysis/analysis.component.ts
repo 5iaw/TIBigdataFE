@@ -15,6 +15,7 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { UserProfile } from "src/app/core/models/user.model";
 import { AuthenticationService } from "src/app/core/services/authentication-service/authentication.service";
 import { FileSystemEntity } from "../../models/FileSystemEntity.model";
+import { IpService } from "src/app/core/services/ip-service/ip.service";
 
 
 function encodeEmail(email: string): string {
@@ -51,8 +52,9 @@ export class AnalysisComponent implements OnInit {
 
   selectedFiles: string[] = [];
 
-  private middlewareUrl = "http://localhost:15050/spark";
+  private middlewareUrl = this.ipService.getMiddlewareServerIp() + "/spark";
   constructor(
+    private ipService: IpService,
     private authService: AuthenticationService, private route: ActivatedRoute, 
     private middlewareService: MiddlewareService,
     private http: HttpClient) {
@@ -734,7 +736,7 @@ drawResultVisualizations(): void {
     if (this.activity === 'count' || this.activity === 'tfidf') {
         this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
         this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
-        this.drawNERTable(JSON.stringify(this.analysisedData.result_graph));
+        // this.drawNERTable(JSON.stringify(this.analysisedData.result_graph));
       }
     else if(this.activity=='network'){
       // this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_table));
