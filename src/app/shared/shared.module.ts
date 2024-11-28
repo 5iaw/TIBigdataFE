@@ -6,6 +6,7 @@ import { ArticleListComponent } from "./component/article-list/article-list.comp
 import { RouteLocationComponent } from "./component/route-location/route-location.component";
 import { SearchBarComponent } from "./component/search-bar/search-bar.component";
 import {TranslateModule} from '@ngx-translate/core';
+import { FileListComponent } from '../features/middleware/components/file-list/file-list.component';
 
 @NgModule({
   declarations: [
@@ -13,6 +14,7 @@ import {TranslateModule} from '@ngx-translate/core';
     ArticleListComponent,
     SearchBarComponent,
     RouteLocationComponent,
+    FileListComponent
   ],
     imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule],
   exports: [
@@ -20,6 +22,7 @@ import {TranslateModule} from '@ngx-translate/core';
     ArticleListComponent,
     ArticleCardViewComponent,
     RouteLocationComponent,
+    FileListComponent
   ],
   providers: [],
   bootstrap: [],

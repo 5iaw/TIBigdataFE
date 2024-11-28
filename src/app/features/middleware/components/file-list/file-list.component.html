@@ -1,158 +1,97 @@
 <div class="content-container">
   <app-connection></app-connection>
   <section class="content">
-    <h1>File Options</h1>
+    <h1 class="section-header">File Options</h1>
+
     <div class="uploadfile">
       <!-- Upload Section -->
-      <div>
-        <input type="file" (change)="onFileSelected($event)" />
+      <div class="upload-container">
+        <input type="file" (change)="onFileSelected($event)" class="upload-dict" />
         <input
           type="text"
           [(ngModel)]="customFileName"
           placeholder="Enter file name (without extension)"
+          class="upload-dict"
         />
         <button
+          class="upload-but"
           (click)="uploadFile()"
           [disabled]="!selectedFile || !customFileName.trim()"
         >
           Upload
         </button>
+        <button class="upload-but" (click)="navigateUp()">Go Up</button>
       </div>
 
-      <!-- Folder Navigation -->
-      <button (click)="navigateUp()">Go Up</button>
+      <!-- File and Folder List -->
+      <ul class="file-list">
+        <li *ngFor="let file of fileList" class="file-item">
+          <div class="file-info">
+            <input type="checkbox" [(ngModel)]="file.selected" />
+            <span
+              *ngIf="file.type === 'folder'"
+              class="folder"
+              (click)="navigateToFolder(file)"
+            >
+              📁 {{ file.name }}
+            </span>
+            <span *ngIf="file.type !== 'folder'" class="file">
+              📄 {{ file.name }}
+            </span>
+          </div>
 
-      <!-- Display Files and Folders -->
-      <li *ngFor="let file of fileList">
-        <input type="checkbox" [(ngModel)]="file.selected" />
-        <span *ngIf="file.type === 'folder'" (click)="navigateToFolder(file)">
-          📁 {{ file.name }}
-        </span>
-        <span *ngIf="file.type !== 'folder'">
-          📄 {{ file.name }}
-          <button (click)="downloadFile(file.id, file.name)">Download</button>
-          <button
-            *ngIf="file.is_analysis_result"
-            (click)="viewAnalysisResult(file)"
-          >
-            View Analysis
-          </button>
-        </span>
-        <button (click)="deleteFile(file)">Delete</button>
-        <button (click)="renameFile(file)">Rename</button>
-        <button (click)="moveFile(file)">Move</button>
-      </li>
+          <div class="button-group">
+            <button class="upload-but" (click)="downloadFile(file.id, file.name)">Download</button>
+            <button
+              class="upload-but"
+              *ngIf="file.is_analysis_result"
+              (click)="viewAnalysisResult(file)"
+            >
+              View Analysis
+            </button>
+            <button class="upload-but" (click)="deleteFile(file)">Delete</button>
+            <button class="upload-but" (click)="renameFile(file)">Rename</button>
+            <button class="upload-but" (click)="moveFile(file)">Move</button>
+          </div>
+        </li>
+      </ul>
 
-      <!-- Dynamic Results Display -->
-      <div *ngIf="selectedAnalysisData">
-        <h2>Analysis Result for {{ selectedAnalysisFileName }}</h2>
-        <div id="analysisResultDisplay">
-          <figure id="table"></figure>
-          <figure id="bar"></figure>
-          <figure id="scatter"></figure>
-          <figure id="tree"></figure>
-          <figure id="network"></figure>
-        </div>
+      <!-- Create Folder Section -->
+      <div class="folder-creation">
+        <input
+          type="text"
+          [(ngModel)]="newFolderName"
+          placeholder="New folder name"
+          class="upload-dict"
+        />
+        <button class="upload-but" (click)="createNewFolder()">Create Folder</button>
       </div>
-      <ng-template #noFiles>
-        <p>No files or folders available.</p>
-      </ng-template>
+    </div>
 
-      <!-- Create Folder Functionality -->
-      <input
-        type="text"
-        [(ngModel)]="newFolderName"
-        placeholder="New folder name"
-      />
-      <button (click)="createNewFolder()">Create Folder</button>
+    <!-- Analysis Parameters Section -->
+    <div class="analysis">
+      <label for="analysisType">Select Analysis Type:</label>
+      <select
+        [(ngModel)]="selectedAnalysisType"
+        id="analysisType"
+        class="select-option"
+        (change)="onAnalysisTypeChange()"
+      >
+        <option value="wordcount">Word Count</option>
+        <option value="kmeans">K-Means</option>
+        <option value="w2v">Word2Vec</option>
+        <option value="tfidf">TF-IDF</option>
+        <option value="lda">LDA</option>
+        <option value="sma">SMA</option>
+        <option value="ngrams">N-Grams</option>
+        <option value="hc">HClustering</option>
+        <option value="ner">NER</option>
+      </select>
+    </div>
 
-      <!-- Analysis Type Selection -->
-      <div class="analysis">
-        <label for="analysisType">Select Analysis Type:</label>
-        <select
-          [(ngModel)]="selectedAnalysisType"
-          id="analysisType"
-          (change)="onAnalysisTypeChange()"
-        >
-          <option value="wordcount">Word Count</option>
-          <option value="kmeans">K-Means</option>
-          <option value="w2v">Word2Vec</option>
-          <option value="tfidf">TF-IDF</option>
-          <option value="lda">LDA</option>
-          <option value="sma">SMA</option>
-          <option value="ngrams">N-Grams</option>
-          <option value="hc">HClustering</option>
-          <option value="ner">NER</option>
-        </select>
-      </div>
-
-      <!-- Dynamic Analysis Parameter Inputs -->
-      <div *ngIf="selectedAnalysisType">
-        <div *ngIf="showDisplayValue">
-          <label for="displayValue">Display Value:</label>
-          <input type="number" [(ngModel)]="displayValue" id="displayValue" />
-        </div>
-
-        <div *ngIf="showKValue">
-          <label for="kValue">K-Value:</label>
-          <input type="number" [(ngModel)]="kValue" id="kValue" />
-        </div>
-
-        <div *ngIf="showW2VParam">
-          <label for="w2vParam">W2V Param:</label>
-          <input type="number" [(ngModel)]="w2vParam" id="w2vParam" />
-        </div>
-
-        <div *ngIf="showTFIDFParam">
-          <label for="tfidfParam">TF-IDF Param:</label>
-          <input type="number" [(ngModel)]="tfidfParam" id="tfidfParam" />
-        </div>
-
-        <div *ngIf="showLDAParam">
-          <label for="ldaParam">LDA Param:</label>
-          <input type="number" [(ngModel)]="ldaParam" id="ldaParam" />
-        </div>
-
-        <div *ngIf="showOptionList">
-          <label for="optionList">Option List:</label>
-          <input type="number" [(ngModel)]="optionList" id="optionList" />
-        </div>
-
-        <div *ngIf="showNERparam">
-          <label for="nerParam">NER Param:</label>
-          <input type="number" [(ngModel)]="nerParam" id="nerParam" />
-        </div>
-
-        <div *ngIf="showLinkStrength">
-          <label for="linkStrength">Link Strength (1-100):</label>
-          <input
-            type="number"
-            [(ngModel)]="linkStrength"
-            id="linkStrength"
-            min="1"
-            max="100"
-          />
-        </div>
-
-        <div *ngIf="showNValue">
-          <label for="nValue">N-Value:</label>
-          <input type="number" [(ngModel)]="nValue" id="nValue" />
-        </div>
-
-        <!-- Submit Job Button -->
-        <button (click)="submitJob()">Submit Job</button>
-
-        <!-- <app-analysis></app-analysis> -->
-      </div>
-      <div class="results">
-        <figure id="table"></figure>
-        <figure id="wordcloud"></figure>
-        <figure id="bar"></figure>
-        <figure id="network"></figure>
-        <figure id="scatter"></figure>
-        <figure id="tree"></figure>
-        <figure id="ldavis"></figure>
-      </div>
+    <!-- Submit Analysis Job -->
+    <div class="button-group">
+      <button class="run" (click)="submitJob()">Submit Job</button>
     </div>
   </section>
 </div>

@@ -33,7 +33,7 @@ function encodeEmail(email: string): string {
 @Component({
   selector: "app-file-list",
   templateUrl: "./file-list.component.html",
-  styleUrls: ["../../middleware-style.less"],
+  styleUrls: ["./file-list.component.css"],
 })
 export class FileListComponent implements OnInit {
   fileList: FileSystemEntity[] = [];
@@ -586,35 +586,6 @@ export class FileListComponent implements OnInit {
       // this.closeLoadingWithMask();
     }
   }
-  // if (this.activity === 'count' || this.activity === 'tfidf') {
-  //   this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
-  //   this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
-  // }
-  //   else if(this.activity=='network'){
-  //     this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_table));
-  //     this.drawNetworkChart(JSON.stringify(this.analysisedData.result_graph));
-  //   }
-  //   else if(this.activity=='ngrams'){
-  //     this.drawNetworkChart(JSON.stringify(this.analysisedData.result_graph));
-  //   }
-  //   else if(this.activity=='kmeans'){
-  //     this.drawTable(this.activity, JSON.stringify(this.analysisedData.result_graph));
-  //     this.drawScatterChart(JSON.stringify(this.analysisedData.result_graph));
-  //   }
-  //   else if(this.activity=='word2vec'){
-  //     // this.drawTable(activity, JSON.stringify(this.analysisedData.result_graph));
-  //     this.drawScatterWordChart(JSON.stringify(this.analysisedData.result_graph));
-  //   }
-  //   else if(this.activity=='hcluster')
-  //     this.drawTreeChart(JSON.stringify(this.analysisedData.result_graph));
-  //   // }
-  //   else if(this.activity=='topicLDA')
-  //     this.drawTopicModeling(JSON.stringify(this.analysisedData.result_graph));
-
-  //   alert("분석 완료되었습니다.");
-  //   // this.closeLoadingWithMask();
-  // }
-
   drawTable(analType: string, data_str: string) {
     let data: any = JSON.parse(data_str);
 
@@ -1244,171 +1215,6 @@ export class FileListComponent implements OnInit {
       .style("border-radius", "5px")
       .style("padding", "10px");
   }
-
-  // /**
-  //  * @description draw a network chart using the data using d3
-  //  */
-
-  // drawOldNetworkChart(data_str:string){
-  //   let data:any
-  // //   {
-  // //     "links" : Array<
-  // //       {"source":number,
-  // //       "target":number,
-  // //       "weight":number}>,
-  // //     "nodes" :  Array<{
-  // //       "between_cen":number,
-  // //       "closeness_cen":number,
-  // //       "degree_cen":number,
-  // //       "eigenvector_cen":number,
-  // //       "id":number,
-  // //       "name":string}>
-  // // }
-  // = JSON.parse(data_str);
-
-  //   // console.log(data);
-  //   const margin = {top: 10, right: 30, bottom: 30, left: 40},
-  //   width = 1000 - margin.left - margin.right,
-  //   height = 1000 - margin.top - margin.bottom;
-
-  //   // append the svg object to the body of the page
-  //   const svg = d3.select("figure#network")
-  //   .append("svg")
-  //   .attr("id","svgstart")
-  //     // .attr("width", width + margin.left + margin.right)
-  //     // .attr("height", height + margin.top + margin.bottom)
-  //     .attr("viewBox", "0, 0," + (width + margin.left + margin.right)+","+  (height + margin.top + margin.bottom))
-  //     .append("g")
-  //     .attr("transform",
-  //           "translate(" + margin.left + "," + margin.top + ")");
-
-  //   // Highlight the specie that is hovered
-  //   const highlight = function(e,d){
-
-  //     d3.selectAll(".dot")
-  //       .transition()
-  //       .duration(200)
-  //       .style("fill", "lightgrey")
-  //       .attr("r", 3)
-
-  //     d3.selectAll(".type" + d.id)
-  //       .transition()
-  //       .duration(200)
-  //       .style("fill", "red")
-  //       .attr("r", 7)
-
-  //     tooltip
-  //       .html(d.name)
-  //       .style("opacity", 1)
-  //   }
-
-  //   // Highlight the specie that is hovered
-  //   const doNotHighlight = function(e,d){
-  //     d3.selectAll(".dot")
-  //       .transition()
-  //       .duration(200)
-  //       .style("fill", "lightgrey")
-  //       .attr("r", 5)
-
-  //     tooltip
-  //     .style("opacity", 0)
-  //     .style("left",  "0px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-  //     .style("top", "0px");
-
-  //     d3.selectAll(".dottext")
-  //       .style("opacity", 1)
-  //   }
-
-  //   // Initialize the links
-  //   let link = svg
-  //   .selectAll("line")
-  //   .data(data.links)
-  //   .enter()
-  //   .append("line")
-  //     .style("stroke", "#aaa")
-  //     .style("stroke-width", 5);
-  //     // .style("stroke-width", d=>d['weight']/10);
-
-  //   // Initialize the nodes
-  //   let node = svg
-  //     .selectAll("circle")
-  //     .data(data.nodes)
-  //     .enter()
-  //     .append("circle")
-  //       .attr("class", function (d) { return "dot type" + d['id']} )
-  //       .attr("r", 7)
-  //       .style("fill", "#69b3a2")
-  //     .on("mouseover", highlight)
-  //     .on("mouseout", doNotHighlight )
-  //     .on("mousemove", function(e) {
-  //       tooltip
-  //       .style("left", (e.pageX+20) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-  //       .style("top", (e.pageY) + "px");
-  //     });
-
-  //     const dataon = function(e,d){
-  //       console.log("mouse on",d);
-  //       svg
-  //       .selectAll("circle")
-  //       .attr("r", d.between_cen);
-  //     }
-
-  //     const dataoff = function(e,d){
-  //       svg
-  //       .selectAll("circle")
-  //       .attr("r", 7);
-  //     }
-
-  //     // let buttons = d3.select("figure#network")
-  //     // .append("button")
-  //     // .data(data.nodes)
-  //     // .text('사이중심성') //['사이중심성','근접중심성','빈도수','연결중심성','eigen value']
-  //     // .on("mouseover",dataon)
-  //     // .on("mouseout",dataoff);
-
-  //   // d3.select("svg")
-  //   svg.append("g")
-  //     .selectAll('label')
-  //     .append("text")
-  //     .data(data.nodes)
-  //       .attr("dx", function(d){return -7})
-  //       .text(d=> d['name'])
-
-  //   // Let's list the force we wanna apply on the network
-  //   let simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
-  //   .force("link", d3.forceLink()                               // This force provides links between nodes
-  //         .id(function(d) { return d['id']; })                     // This provide  the id of a node
-  //         .links(data.links)                                    // and this the list of links
-  //   )
-  //   .force("charge", d3.forceManyBody().strength(-40))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-  //   .force("center", d3.forceCenter(width / 2, height / 2))     // This force attracts nodes to the center of the svg area
-  //   .on("end", ticked);
-
-  //   // This function is run at each iteration of the force algorithm, updating the nodes position.
-  //   function ticked() {
-  //   link
-  //     .attr("x1", function(d) { return d['source']['x']; })
-  //     .attr("y1", function(d) { return d['source']['y']; })
-  //     .attr("x2", function(d) { return d['target']['x']; })
-  //     .attr("y2", function(d) { return d['target']['y']; });
-
-  //   node
-  //     .attr("cx", function (d) { return d['x']; })
-  //     .attr("cy", function(d) { return d['y']; });
-  //   }
-
-  //   // Draw a tooltip
-  //   const tooltip = d3.select("figure#network")
-  //     .append("div")
-  //     .style("opacity", 0)
-  //     .style("position","absolute")
-  //     .style("background-color", "white")
-  //     .style("border", "solid")
-  //     .style("border-width", "1px")
-  //     .style("border-radius", "5px")
-  //     .style("padding", "10px");
-  // };
-
   /**
    * @description draw a network chart using the data using d3
    */
@@ -1796,57 +1602,6 @@ export class FileListComponent implements OnInit {
   drawTopicModeling(data_str: string) {
     let data = JSON.parse(data_str);
 
-    // let LDAvis;
-    // function LDAvis_load_lib(url, callback){
-    // let url = "https://cdn.jsdelivr.net/gh/bmabey/pyLDAvis@3.2.2/pyLDAvis/js/ldavis.v3.0.0.js";
-    // console.log("loading lib");
-    // let node = document.createElement('script');
-    // node.src = url;
-    // node.type = 'text/javascript';
-    // node.async = true;
-    // node.charset = 'utf-8';
-    // document.getElementsByTagName('head')[0].appendChild(node);
-
-    // let s = document.createElement('script');
-    // s.src = url;
-    // s.async = true;
-    // // s.onreadystatechange =
-    // node.onload = callback;
-    // s.onerror = function(){
-    //   console.warn("failed to load library " + url);
-    // };
-    // document.getElementById("topic").appendChild(s);
-    // }
-
-    // LDAvis
-
-    // if(typeof(LDAvis) !== "undefined"){
-    //   // already loaded: just create the visualization
-    //   // !function(LDAvis){
-    //       LDAvis = new LDAvis("#" + "ldavis", data);
-    //   // }(LDAvis);
-    // }
-    // // else if(typeof(define) === "function" && define.amd){
-    //   // require.js is available: use it to load d3/LDAvis
-
-    //   require.config({paths: {d3: "https://d3js.org/d3.v5"}});
-    //   require(["d3"], function(d3){
-    //       window.d3 = d3;
-    //       LDAvis_load_lib("https://cdn.jsdelivr.net/gh/bmabey/pyLDAvis@3.2.2/pyLDAvis/js/ldavis.v3.0.0.js", function(){
-    //         new LDAvis("#" + "ldavis", data);
-    //       });
-    //     });
-    // }
-    // else{
-    // require.js not available: dynamically load d3 & LDAvis
-    // LDAvis_load_lib("https://d3js.org/d3.v5.js", function(){
     lda.ldavis("#ldavis", data);
-    // LDAvis_load_lib("https://cdn.jsdelivr.net/gh/bmabey/pyLDAvis@3.2.2/pyLDAvis/js/ldavis.v3.0.0.js", function(){
-    // var win = window.open('./ldavis.html', 'Topic Modeling','width=#, height=#');
-    // win.document.write("<script>lda.ldavis('#ldavis', data);</script>");
-
-    // })
-    // });
-    // }
   }
 }

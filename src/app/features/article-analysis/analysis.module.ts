@@ -10,6 +10,7 @@ import { SharedModule } from "src/app/shared/shared.module";
 import { FileUploadModule } from 'ng2-file-upload';
 import { savedDocForAnalysis } from "./components/savedDocForAnalysis/savedDocForAnalysis.component";
 import {TranslateModule} from '@ngx-translate/core';
+import { FileListComponent } from '../middleware/components/file-list/file-list.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,7 @@ import {TranslateModule} from '@ngx-translate/core';
     PreprocessingComponent,
     AnalysisComponent,
     AnalysisMenuComponent,
-    savedDocForAnalysis,
+    savedDocForAnalysis
   ],
     imports: [CommonModule, AnalysisRoutingModule, SharedModule, FileUploadModule, TranslateModule],
 })

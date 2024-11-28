@@ -12,11 +12,11 @@ import { IpService } from "src/app/core/services/ip-service/ip.service";
 })
 export class MiddlewareService {
 
-  // private baseUrl = "http://localhost:10000/file";
-  // private analysis_url = "http://localhost:10000/input_livy";
+  private baseUrl = "http://localhost:10000/file";
+  private analysis_url = "http://localhost:10000/input_livy";
   // Backend API endpoints
-  private baseUrl = this.ipService.getMiddlewareServerIp() + "/file";
-  private analysis_url = this.ipService.getMiddlewareServerIp() + "/input_livy";
+  // private baseUrl = this.ipService.getMiddlewareServerIp() + "/file";
+  // private analysis_url = this.ipService.getMiddlewareServerIp() + "/input_livy";
 
   constructor(
     private ipService: IpService,

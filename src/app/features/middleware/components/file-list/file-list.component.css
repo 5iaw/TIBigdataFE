@@ -1,0 +1,53 @@
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+  gap: 20px; /* Add spacing between file info and buttons */
+}
+
+.button-group {
+  display: flex;
+  gap: 5px; /* Smaller gaps between buttons for better layout */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.file-info {
+  flex-grow: 1; /* Ensure file info takes up available space */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+button.upload-but {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+button.upload-but:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+button.upload-but:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .file-item {
+    flex-direction: column; /* Stack file info and buttons on smaller screens */
+    align-items: flex-start;
+  }
+
+  .button-group {
+    flex-direction: row; /* Buttons remain horizontal in their group */
+    justify-content: flex-start;
+    gap: 10px;
+  }
+}

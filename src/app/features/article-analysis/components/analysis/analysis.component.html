@@ -54,7 +54,7 @@
     </div>
   </div>
 
-  
+
   <div class="pop-block">
     <div class="pop-head" id="network-head" (click)="showPop('network')">{{'analysis.semanticNetworkAnalysis'|translate}}
       <img class="tooltip"
@@ -128,6 +128,7 @@
     <hr *ngIf="isDataAnalysised">
 
     <figure id="table"></figure>
+
     <!-- <table>
       <tr>
         <th>No</th>
@@ -153,10 +154,10 @@
 
   <button (click)="saveSvg()" class="run" *ngIf="isDataAnalysised">{{'analysis.save2myAnalysis'|translate}}</button>
   <button (click)="downloadPng()" class="run" *ngIf="isDataAnalysised">{{'analysis.downloadChartImage'|translate}}</button>
-  
-  <!-- <button (click)="toMyAnalysis()" class="run" *ngIf="isDataAnalysised">내 분석함 이동</button> -->
 
+  <!-- <button (click)="toMyAnalysis()" class="run" *ngIf="isDataAnalysised">내 분석함 이동</button> -->
 </section>
 
+    <app-file-list></app-file-list>
   </section>
 </div>

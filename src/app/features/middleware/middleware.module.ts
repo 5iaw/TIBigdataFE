@@ -20,7 +20,6 @@ import { TransferComponent } from './components/transfer/transfer.component';  /
     AnalysisComponent,
     ElasticSearchComponent,
     UploadComponent,
-    FileListComponent,
     TransferComponent
   ],
     imports: [
