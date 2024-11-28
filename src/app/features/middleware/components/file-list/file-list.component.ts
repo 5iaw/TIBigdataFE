@@ -110,14 +110,14 @@ export class FileListComponent implements OnInit {
       return;
     }
 
-    console.log(file.is_analysis_result);
-    console.log(file.analysis_result_type);
-    console.log(file.hdfsFilePath);
     // Fetch the analysis result data
     const params = new HttpParams()
       .set("owner", file.owner)
       .set("output_path", file.hdfsFilePath || "");
 
+    console.log("File selected for analysis:", file);
+    console.log("Analysis type:", file.analysis_result_type);
+    console.log("File path:", file.hdfsFilePath);
     this.middlewareService.getAnalysisResult(params).subscribe(
       (response) => {
         if (response.success) {
@@ -141,6 +141,12 @@ export class FileListComponent implements OnInit {
               break;
             case "network":
               this.drawNetworkChart(this.selectedAnalysisData);
+              break;
+            case "word2vec":
+              console.log("Rendering scatter chart for Word2Vec...");
+              this.drawScatterWordChart(
+                JSON.stringify(this.selectedAnalysisData),
+              );
               break;
             case "ngrams":
               this.drawNetworkChart(this.selectedAnalysisData);
@@ -387,7 +393,7 @@ export class FileListComponent implements OnInit {
             case "ngrams":
               this.drawNetworkChart(this.analysisedData);
               break;
-            case "w2v":
+            case "word2v":
               this.drawScatterWordChart(this.analysisedData);
               break;
             case "hc":
@@ -1032,13 +1038,11 @@ export class FileListComponent implements OnInit {
    */
 
   drawScatterWordChart(data_str: string) {
-    let data: Array<{
-      word: string;
-      x: number;
-      y: number;
-      wcount: number;
-    }> = JSON.parse(data_str);
+    const parsedData = JSON.parse(data_str);
 
+    let data: Array<{ word: string; x: number; y: number; wcount: number }> =
+      parsedData.result_graph;
+    console.log(data);
     const normWcount = d3
       .scaleLinear()
       .domain(d3.extent(data, (d) => +d["wcount"]))
