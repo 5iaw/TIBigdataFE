@@ -47,6 +47,39 @@ export class AnalysisOnMiddlewareService {
      * @returns res
      */
 
+    async postDataToFlask(route:string, data: string): Promise<any> {
+        
+        let res: QueryResponse = await this.http
+            .post<any>(this.middleware_URL+route, data, {'headers':{'Content-Type': 'application/json'}})
+            .toPromise();
+
+            if(res == undefined) {
+                // alert('내부적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요!');
+                return null;
+            }
+
+        return res;
+    }
+
+    async getDataFromFlask(route: string): Promise<any> {
+        const url = `${this.middleware_URL}${route}`; // Use your middleware URL dynamically
+        console.log("Fetching data from", url);
+      
+        try {
+          const data = await this.http.get<any>(url).toPromise();
+          if (!data) {
+            console.error("No data received from the server.");
+            return null;
+          }
+          return data;
+        } catch (error) {
+          console.error("Error fetching data from Flask:", error);
+          throw error;
+        }
+      }
+      
+      
+
     async postDataToMiddleware(route:string, data: string): Promise<any> {
         
         let res: QueryResponse = await this.http
