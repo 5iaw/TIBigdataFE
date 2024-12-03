@@ -115,6 +115,18 @@
     </div>
   </div>
   </div>
+  
+  <div class="pop-block">
+    <div class="pop-head" id="ner-head" (click)="showPop('ner')">{{'analysis.ner'|translate}}
+      <img class="tooltip"
+        src="../../../../assets/icons/help-gray.png"
+      />
+    </div>
+    <div class="pop-body" id="ner">
+
+      <button (click)="runAnalysis('ner')">{{'analysis.startAnalysis'|translate}}</button>
+    </div>
+  </div>
 
   <section class='section-result' >
 

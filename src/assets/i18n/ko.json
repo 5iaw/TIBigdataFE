@@ -208,6 +208,7 @@
     "clusterNum": "군집 개수: ",
     "ngramNum": "분석할 ngram 개수: ",
     "topicNum": "토픽 수: ",
+    "ner": "개체명 인식",
     "preprocessingPreview": "전처리 미리보기",
     "preprocessingPreviewDetail": "전처리한 결과를 정리한 표입니다. 미리보기는 100개까지만 표시됩니다.",
     "analysisResult": "분석 결과",

@@ -207,6 +207,7 @@
     "clusterNum": "Number of Clusters: ",
     "ngramNum": "Number of ngrams: ",
     "topicNum": "Number of Topics: ",
+    "ner": "Named Entity Recognition",
     "preprocessingPreview": "Preprocessing Preview",
     "preprocessingPreviewDetail": "Table of Preprocessing Results. The preview contains only upto 100 results.",
     "analysisResult": "Analysis Result",
