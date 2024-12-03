@@ -3,6 +3,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { ManualComponent } from "./components/manual/manual.component";
 import { PreprocessingComponent } from "./components/preprocessing/preprocessing.component";
 import { AnalysisComponent } from "./components/analysis/analysis.component";
+import { FileListComponent } from '../middleware/components/file-list/file-list.component';
 
 const routes: Routes = [
   {
@@ -22,6 +23,10 @@ const routes: Routes = [
     path: "analysis",
     component: AnalysisComponent,
   },
+  {
+    path: "file-list",
+    component: FileListComponent,
+  }
 ];
 
 @NgModule({

@@ -54,6 +54,7 @@ export class AnalysisMenuComponent implements OnInit {
     if (currentAddress === "manual") this.title = this.translate.instant('메뉴얼');
     if (currentAddress === "preprocessing") this.title = this.translate.instant('전처리');
     if (currentAddress === "analysis") this.title = this.translate.instant('자료분석');
+    if (currentAddress === "file-list") this.title = this.translate.instant('file-list');
   }
 
   toManual() {
@@ -68,6 +69,11 @@ export class AnalysisMenuComponent implements OnInit {
 
   toAnalysis() {
     this.router.navigateByUrl("/analysis-menu/analysis");
+    this.ngOnInit();
+  }
+
+  toFileList() {
+    this.router.navigateByUrl("/analysis-menu/file-list");
     this.ngOnInit();
   }
 

@@ -20,6 +20,12 @@
         id="analysis">
         <a (click)="toAnalysis()">{{'navbar.analysis'|translate}}</a>
       </li>
+      <li
+        [ngStyle]="selectedStyleObject(currentMenu == 'file-list')"
+        class="menu-item"
+        id="file-list">
+        <a (click)="toFileList()">{{'file-list'|translate}}</a>
+      </li>
     </ul>
   </div>
 </aside>

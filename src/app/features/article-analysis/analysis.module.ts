@@ -18,7 +18,8 @@ import { FileListComponent } from '../middleware/components/file-list/file-list.
     PreprocessingComponent,
     AnalysisComponent,
     AnalysisMenuComponent,
-    savedDocForAnalysis
+    savedDocForAnalysis,
+    FileListComponent
   ],
     imports: [CommonModule, AnalysisRoutingModule, SharedModule, FileUploadModule, TranslateModule],
 })
