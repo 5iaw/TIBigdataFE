@@ -154,7 +154,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
 
   async runAnalysis(analysis: string): Promise<void> {
 
-
     // Check the options
     if (this.selectedSavedDate == null) return alert('문서를 선택해주세요!');
     if (!this.isSelectedPreprocessed) return alert('선택하신 문서는 전처리되지 않은 문서입니다. 전처리를 먼저 해주세요!');
@@ -288,14 +287,15 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
           this.jobStatus = "Job completed successfully!";
           this.isJobCompleted = true;
           this.loading = false;
-          alert("분석 완료되었습니다.");
-          this.closeLoadingWithMask();
+          // alert("분석 완료되었습니다.");
+          // this.closeLoadingWithMask();
           await this.getAnalysisResult(); // Fetch results after completion
         } else if (status.state === "failed") {
           clearInterval(pollingInterval);
           this.jobStatus = "Job failed.";
           this.isJobCompleted = true;
           this.loading = false;
+          alert("분석 실패하었습니다.");
         } else {
           this.jobStatus = "Job is still running...";
         }
@@ -389,8 +389,9 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       // Add visualization logic here
       if (this.analysis === 'count' || this.analysis === 'tfidf') {
         this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_graph));
+        console.log('Done drawing table!')
         this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
-        // this.drawNERTable(JSON.stringify(this.analysisedData.result_graph));
+        console.log('Done drawing chart!')
       }
       else if (this.analysis == 'network') {
         // this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_table));
@@ -401,7 +402,9 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       }
       else if (this.analysis == 'kmeans') {
         this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_graph));
+        console.log('Done drawing table!')
         this.drawScatterChart(JSON.stringify(this.analysisedData.result_graph));
+        console.log('Done drawing scatter chart!')
       }
       else if (this.analysis == 'word2vec') {
         // this.drawTable(analysis, JSON.stringify(this.analysisedData.result_graph));
@@ -414,10 +417,10 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         this.drawTopicModeling(JSON.stringify(this.analysisedData.result_graph));
 
       else if (this.analysis == 'ner')
-        this.drawNERTable(JSON.stringify(this.analysisedData.result_graph));
+        this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_graph));
 
       alert("분석 완료되었습니다.");
-      // this.closeLoadingWithMask();
+      this.closeLoadingWithMask();
     }
   }
   /**
@@ -455,6 +458,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     }
 
     else if (analType == 'kmeans') {
+      console.log('KMeans table : ');
       const th = table.append("tr")
         .style('padding', '15px 0px')
         .style('font-weight', '500')
@@ -463,27 +467,75 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       th.append('th').text('category');
       th.append('th').text('title');
       // th.append('th').text('값');
+      console.log('Table headers created', th);
 
       const tbody = table.append("tbody")
         .style('text-align', 'center');
 
       let max = 0;
       for (let i = 0; i < data.length; i++) {
+        console.log(`Checking data[${i}]:`, data[i]);
         if (data[i]['category'] > max)
           max = data[i]['category'];
+        console.log(`New max category found: ${max}`);
       }
 
+      console.log(`Maximum category: ${max}`);
       for (let i = 0; i <= max; i++) {
+        console.log(`Creating row for category: ${i + 1}`);
         const tr = tbody.append("tr");
         tr.append("td").text(i + 1);
         const td = tr.append("td");
+        
+        let categoryCount = 0;
         for (let j = 0; j < data.length; j++) {
+          console.log(`Checking if data[${j}]['category'] == ${i}`);
           if (data[j]['category'] == i) {
+            console.log(`Adding title to category ${i}:`, data[j]['title']);
             td.append("ul").text(data[j]['title']);
+            categoryCount++;
           }
+        }
+        if (categoryCount === 0) {
+          console.log(`No entries found for category ${i}`);
         }
         // tr.append("td").text(data[i]['value']);
       }
+      console.log('KMeans analysis completed');
+    }
+      else if(analType=='ner'){
+        const th = table.append("thead").append("tr")
+            .style('padding', '15px 0px')
+            .style('font-weight', '500')
+            .style('text-align', 'center');
+
+        th.append('th').text('No');
+        th.append('th').text('단어');
+        th.append('th').text('품사');
+
+        // Create table body
+        const tbody = table.append("tbody")
+            .style('text-align', 'center');
+
+        console.log("Start appending rows...");  // Debug line to indicate the start of row appending
+
+        // Loop through data and create rows for each entry
+        data.forEach((item, index) => {
+            console.log("Row Data - Word:", item['word'], "POS:", item['value']);  // Debug line to check each row's data
+
+            const tr = tbody.append("tr");
+
+            // Add table cells for "No", "단어", and "품사"
+            tr.append("td").text(index + 1);  // No
+            tr.append("td").text(item['word']);  // 단어 (Word)
+            tr.append("td").text(item['value']);  // 품사 (POS Tag)
+
+            console.log("Row appended for index:", index + 1);  // Debug line to confirm row is added
+        });
+
+        console.log("Finished appending rows.");
+    
+
     }
 
     else if (analType == 'network') {
@@ -1456,53 +1508,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     return svg.node();
   }
 
-  drawNERTable(data_str: string) {
-    // Parse the data string into a JavaScript object
-    // let data = JSON.parse(data_str);
-
-    let data = [
-      { "text": "대통령은", "pos": "NOUN", "dep": "dislocated" },
-      { "text": "제1항과", "pos": "PART", "dep": "advcl" },
-      { "text": "제2항의", "pos": "PART", "dep": "nsubj" },
-      { "text": "처분", "pos": "NOUN", "dep": "obj" }
-    ];
-
-    // Create the table structure inside a figure with id 'table'
-    const table = d3.select("figure#table")
-      .attr('class', 'result-pretable')
-      .append("table")
-      .attr('width', '100%')
-      .attr('height', '300px');
-
-    // Table header
-    const th = table.append("tr")
-      .style('padding', '15px 0px')
-      .style('font-weight', '500')
-      .style('text-align', 'center');
-
-    // Adding column headers for word, POS
-    th.append('th').text('No');
-    th.append('th').text('단어'); // "Word"
-    th.append('th').text('품사'); // "Part of Speech"
-
-    // Table body
-    const tbody = table.append("tbody")
-      .style('text-align', 'center');
-
-    // Loop through the data and create rows for each entity
-    for (let i = 0; i < data.length; i++) {
-      const tr = tbody.append("tr");
-
-      // Add index column
-      tr.append("td").text(i + 1);
-
-      // Add word column
-      tr.append("td").text(data[i]['text']);
-
-      // Add part of speech (POS) column
-      tr.append("td").text(data[i]['pos']);
-    }
-  }
 
 
   drawTopicModeling(data_str: string) {
