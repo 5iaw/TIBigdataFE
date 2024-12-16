@@ -7,6 +7,8 @@ import {SortOption} from 'src/app/core/enums/serch-result-sort-option';
 import {ArticleSource} from 'src/app/core/models/article.model';
 import {IpService} from 'src/app/core/services/ip-service/ip.service';
 import {ElasticSearchQueryModel} from '../../models/elasticsearch.service.query.model';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { QueryResponse } from "../../models/query.response.model";
 
 @Injectable({
   providedIn: "root",
@@ -40,19 +42,54 @@ export class ElasticsearchService {
   private topicHashKeys : string[] = [];
   private doctype: string = null;
 
+  private middleware_URL = this.ipService.getMiddlewareServerIp();
+
 
   constructor(
-    private ipSvc: IpService,
-    private esQueryModel: ElasticSearchQueryModel
+    private ipService: IpService,
+    private http: HttpClient,
+    private esQueryModel: ElasticSearchQueryModel,
   ) {
     this.resetSearchFilterValue();
-    if (!this.client) {
-      this._connect();
-    }
+    // if (!this.client) {
+    //   this._connect();
+    // }
   }
+  
 
   resetSearchFilterValue() {
 
+  }
+
+  async postDataToFlask(route:string, data: any): Promise<any> {
+        
+    let res: QueryResponse = await this.http
+        .post<any>(this.middleware_URL+route, data, {'headers':{'Content-Type': 'application/json'}})
+        .toPromise();
+
+        if(res == undefined) {
+            // alert('내부적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요!');
+            return null;
+        }
+
+    return res;
+}
+
+async getDataFromFlask(route: string): Promise<any> {
+    const url = `${this.middleware_URL}${route}`; // Use your middleware URL dynamically
+    console.log("Fetching data from", url);
+  
+    try {
+      const data = await this.http.get<any>(url).toPromise();
+      if (!data) {
+        console.error("No data received from the server.");
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.error("Error fetching data from Flask:", error);
+      throw error;
+    }
   }
 
   /**
@@ -151,17 +188,34 @@ export class ElasticsearchService {
    * @description Send query to get information of Search history
    * @param string: index name => search_log-<year>.<month>
    */
-  getSearchHistory(index: string): Promise<any> {
-    return this.client.count({
-      index: index,
+  async getSearchHistory(): Promise<any> {
+    const data = {
       body: {
-        query: {
-          match: {
-            search_word: this.getKeyword(),
-          },
-        },
-      }
-    });
+            query: {
+              match: {
+                search_word: this.getKeyword(),
+              },
+            },
+          }
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.count({
+    //   index: index,
+    //   body: {
+    //     query: {
+    //       match: {
+    //         search_word: this.getKeyword(),
+    //       },
+    //     },
+    //   }
+    // });
   }
 
   /**
@@ -169,18 +223,34 @@ export class ElasticsearchService {
    * @param startIndex A index to indicate where to start search.
    * @param docSize Number of articles to search at one time.
    */
-  searchAllDocs(startIndex?: number, docSize?: number): any {
+  async searchAllDocs(startIndex?: number, docSize?: number): Promise<any> {
     if (!startIndex) startIndex = 0;
     if (!docSize) docSize = this.numDocsPerPage;
 
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       body: this.esQueryModel.getAllDocs(),
       from: startIndex,
       size: docSize,
       filterPath: this.esQueryModel.getFilterPath(),
-      _source: this.esQueryModel.getSearchSource(),
-    });
+      _source: this.esQueryModel.getSearchSource()
+    };
+  
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchAllDocs:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: this.esQueryModel.getAllDocs(),
+    //   from: startIndex,
+    //   size: docSize,
+    //   filterPath: this.esQueryModel.getFilterPath(),
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   /**
@@ -206,18 +276,34 @@ export class ElasticsearchService {
    * @param startIndex A index to indicate where to start search.
    * @param docSize Number of articles to search at one time.
    */
-  searchByText(startIndex?: number, docSize?: number): Promise<any> {
+  async searchByText(startIndex?: number, docSize?: number): Promise<any> {
     if (!startIndex) startIndex = 0;
     if (!docSize) docSize = this.numDocsPerPage;
 
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
+      body: this.esQueryModel.getSearchDocs(),
       from: startIndex,
       size: docSize,
       filterPath: this.esQueryModel.getFilterPath(),
-      body: this.esQueryModel.getSearchDocs(),
-      _source: this.esQueryModel.getSearchSource(),
-    });
+      _source: this.esQueryModel.getSearchSource()
+    };
+  
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByText:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   from: startIndex,
+    //   size: docSize,
+    //   filterPath: this.esQueryModel.getFilterPath(),
+    //   body: this.esQueryModel.getSearchDocs(),
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   /**
@@ -225,10 +311,21 @@ export class ElasticsearchService {
    * @returns Response of query.
    */
   async countAllDocs(): Promise<any> {
-    return await this.client.count({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       body: this.esQueryModel.getAllDocs(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return await this.client.count({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: this.esQueryModel.getAllDocs(),
+    // });
   }
 
   /**
@@ -244,23 +341,44 @@ export class ElasticsearchService {
    * @description Update number of articles that mathces with search keyword.
    * @returns query result
    */
-  countByText(): Promise<any> {
-    return this.client.count({
-      index: this.ipSvc.ES_INDEX,
+  async countByText(): Promise<any> {
+    const data = {
       body: this.esQueryModel.getSearchDocCount(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.count({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: this.esQueryModel.getSearchDocCount(),
+    // });
   }
 
-  countByFilter(): Promise<any> {
-    return this.client.count({
-      index: this.ipSvc.ES_INDEX,
+  async countByFilter(): Promise<any> {
+    const data = {
       body: this.getSearchCountFilterQuery(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.count({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: this.getSearchCountFilterQuery(),
+    // });
   }
 
-  countByLibrary(): Promise<any> {
-    return this.client.count({
-      index: this.ipSvc.ES_INDEX,
+  async countByLibrary(): Promise<any> {
+    const data = {
       body: {
         query: {
           bool: {
@@ -272,7 +390,29 @@ export class ElasticsearchService {
           }
         },
       }
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.count({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: {
+    //     query: {
+    //       bool: {
+    //         must: [
+    //           this.getHashKeyQuery(),
+    //           this.getInstQuery(),
+    //           this.getDictionaryQuery(),
+    //         ]
+    //       }
+    //     },
+    //   }
+    // });
   }
 
   /**
@@ -306,11 +446,22 @@ export class ElasticsearchService {
    * @description Update number of articles that mathces with list of hashKeys.
    * @returns query result
    */
-  countByHashKeys(): Promise<any> {
-    return this.client.count({
-      index: this.ipSvc.ES_INDEX,
+  async countByHashKeys(): Promise<any> {
+    const data = {
       body: this.esQueryModel.getSearchHashKeys(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.count({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: this.esQueryModel.getSearchHashKeys(),
+    // });
   }
 
   /**
@@ -325,13 +476,27 @@ export class ElasticsearchService {
   /**
    * @description Send query to ElasticSearch with article hashKeys
    */
-  searchByHashKey(): Promise<any> {
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
-      filterPath: this.esQueryModel.getFilterPath(),
+  async searchByHashKey(): Promise<any> {
+    const data = {
       body: this.esQueryModel.getSearchHashKeys(),
-      _source: this.esQueryModel.getSearchSource(),
-    });
+      filterPath: this.esQueryModel.getFilterPath(),
+      _source: this.esQueryModel.getSearchSource()
+    };
+  
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   filterPath: this.esQueryModel.getFilterPath(),
+    //   body: this.esQueryModel.getSearchHashKeys(),
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   /**
@@ -348,13 +513,28 @@ export class ElasticsearchService {
    * @param startIndex A index to indicate where to start search.
    * @param docSize Number of articles to search at one time.
    */
-  searchByManyHashKey(startIndex?: number): Promise<any> {
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
-      size: this.esQueryModel.getSearchHashKeys().query.terms.hash_key.length,
+  async searchByManyHashKey(startIndex?: number): Promise<any> {
+    const data = {
       body: this.esQueryModel.getSearchHashKeys(),
-      _source: this.esQueryModel.getSearchSource(),
-    });
+      size: this.esQueryModel.getSearchHashKeys().query.terms.hash_key.length,
+      filterPath: this.esQueryModel.getFilterPath(),
+      _source: this.esQueryModel.getSearchSource()
+    };
+  
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   size: this.esQueryModel.getSearchHashKeys().query.terms.hash_key.length,
+    //   body: this.esQueryModel.getSearchHashKeys(),
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   /**
@@ -437,7 +617,7 @@ export class ElasticsearchService {
     this.saveSearchResult(this.triggerSearchFilter(startIndex));
   }
 
-  triggerSearchFilter(startIndex?: number, docSize?: number): void {
+  async triggerSearchFilter(startIndex?: number, docSize?: number): Promise<void> {
     // console.log("--------es start---------")
     // console.log(this.startDate)
     // console.log(this.endDate)
@@ -452,14 +632,30 @@ export class ElasticsearchService {
     if (!startIndex) startIndex = 0;
     if (!docSize) docSize = this.numDocsPerPage;
 
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       from: startIndex,
       size: docSize,
       filterPath: this.esQueryModel.getFilterPath(),
       body: this.getSearchFilterQuery(),
-      _source: this.esQueryModel.getSearchSource(),
-    });
+      _source: this.esQueryModel.getSearchSource()
+    };
+  
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   from: startIndex,
+    //   size: docSize,
+    //   filterPath: this.esQueryModel.getFilterPath(),
+    //   body: this.getSearchFilterQuery(),
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   getSearchCountFilterQuery(){
@@ -668,8 +864,7 @@ export class ElasticsearchService {
    * @returns query response
    */
   async getInstitutionsWithTextSearch(): Promise<any> {
-    return await this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       body: {
         size: 0,
         aggs: {
@@ -684,13 +879,39 @@ export class ElasticsearchService {
             fields: ["post_title", "file_extracted_content", "post_body"],
           },
         },
-      },
-    });
+      }
+    };
+  
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return await this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: {
+    //     size: 0,
+    //     aggs: {
+    //       count: { terms: {
+    //         field: "published_institution.keyword",
+    //           size: 20
+    //       } },
+    //     },
+    //     query: {
+    //       multi_match: {
+    //         query: this.keyword,
+    //         fields: ["post_title", "file_extracted_content", "post_body"],
+    //       },
+    //     },
+    //   },
+    // });
   }
 
   async getDoctypeWithTextSearch(): Promise<any> {
-    return await this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       body: {
         aggs: {
           count: {
@@ -713,14 +934,49 @@ export class ElasticsearchService {
               }
             }
           }
-        },
-      },
-    });
+        }
+      }
+    };
+
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return await this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: {
+    //     aggs: {
+    //       count: {
+    //         terms: {
+    //           field: "doc_type.keyword",
+    //         } },
+    //     },
+    //     query: {
+    //       bool: {
+    //         must : this.getKeywordQuery(),
+    //         filter: {
+    //           bool: {
+    //             must: [
+    //               this.getHashKeyQuery(),
+    //               this.getInstQuery(),
+    //               this.getDateQuery(),
+    //               this.getKeywordOption(),
+    //               this.getDoctypeQuery(),
+    //             ]
+    //           }
+    //         }
+    //       }
+    //     },
+    //   },
+    // });
   }
 
   async getInstitutionsNum() {
-    return await this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       body: {
         size: 0,
         aggs: {
@@ -728,10 +984,31 @@ export class ElasticsearchService {
             cardinality: {
               field: "published_institution.keyword",
             }
-          },
-        },
-      },
-    });
+          }
+        }
+      }
+    };
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return await this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: {
+    //     size: 0,
+    //     aggs: {
+    //       unique_institutions: {
+    //         cardinality: {
+    //           field: "published_institution.keyword",
+    //         }
+    //       },
+    //     },
+    //   },
+    // });
   }
 
   /**
@@ -739,8 +1016,7 @@ export class ElasticsearchService {
    * @returns query response
    */
   async getInstitutions(numInstit?: number): Promise<any> {
-    return await this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       body: {
         size: 0,
         aggs: {
@@ -750,16 +1026,36 @@ export class ElasticsearchService {
           } },
         },
       },
-    });
+    };
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    
+    // return await this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: {
+    //     size: 0,
+    //     aggs: {
+    //       count: { terms: {
+    //         field: "published_institution.keyword",
+    //         size: numInstit
+    //       } },
+    //     },
+    //   },
+    // });
   }
 
   /**
    * @description Send query of getting articles that are published from selected institution.
    * @param startIndex A index to indicate where to start search.
    */
-  searchByInst(startIndex?: number): Promise<any> {
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+  async searchByInst(startIndex?: number): Promise<any> {
+    const data = {
       from: startIndex,
       size: this.numDocsPerPage,
       body: {
@@ -770,7 +1066,29 @@ export class ElasticsearchService {
         },
       },
       _source: this.esQueryModel.getSearchSource(),
-    });
+    };
+    
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   from: startIndex,
+    //   size: this.numDocsPerPage,
+    //   body: {
+    //     query: {
+    //       match: {
+    //         published_institution: this.selectedInst,
+    //       },
+    //     },
+    //   },
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   getDictionaryQuery(){
@@ -793,10 +1111,10 @@ export class ElasticsearchService {
     }
   }
 
-  searchByLibrary(startIndex?: number, docSize?: number): Promise<any> {
+  async searchByLibrary(startIndex?: number, docSize?: number): Promise<any> {
     if (!startIndex) startIndex = 0;
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    
+    const data = {
       from: startIndex,
       size: this.numDocsPerPage,
       body: {
@@ -813,7 +1131,34 @@ export class ElasticsearchService {
         sort: [this.esQueryModel.getSortOption()],
       },
       _source: this.esQueryModel.getSearchSource(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   from: startIndex,
+    //   size: this.numDocsPerPage,
+    //   body: {
+    //     query: {
+    //       bool: {
+    //         must: [
+    //           this.getDoctypeQuery(),
+    //           this.getHashKeyQuery(),
+    //           this.getInstQuery(),
+    //           this.getDictionaryQuery(),
+    //         ]
+    //       }
+    //     },
+    //     sort: [this.esQueryModel.getSortOption()],
+    //   },
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   /**
@@ -838,8 +1183,8 @@ export class ElasticsearchService {
    * @returns query response
    */
   async countByInst(): Promise<any> {
-    return await this.client.count({
-      index: this.ipSvc.ES_INDEX,
+    
+    const data = {
       body: {
         query: {
           match: {
@@ -847,7 +1192,25 @@ export class ElasticsearchService {
           },
         },
       },
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/count', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByHashKey:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return await this.client.count({
+    //   index: this.ipSvc.ES_INDEX,
+    //   body: {
+    //     query: {
+    //       match: {
+    //         published_institution: this.selectedInst,
+    //       },
+    //     },
+    //   },
+    // });
   }
 
   /**
@@ -873,23 +1236,23 @@ export class ElasticsearchService {
   /**
    * @description create connection of client and Elasticsearch in backend server.
    */
-  private _connect() {
-    this.client = new elasticsearch.Client({
-      host: [
-        {
-          host: this.ipSvc.getBackEndServerIp(),
-          auth: this.ipSvc.getESAuth(),
-          protocol: "https",
-          port: this.ipSvc.ES_PORT,
-          index: this.ipSvc.ES_INDEX,
-        },
-      ],
-      headers: {
-        "Access-Control-Allow-Origin":
-          this.ipSvc.getFrontEndServerIP() + this.ipSvc.getAngularPort(),
-      },
-    });
-  }
+  // private _connect() {
+  //   this.client = new elasticsearch.Client({
+  //     host: [
+  //       {
+  //         host: this.ipSvc.getBackEndServerIp(),
+  //         auth: this.ipSvc.getESAuth(),
+  //         protocol: "https",
+  //         port: this.ipSvc.ES_PORT,
+  //         index: this.ipSvc.ES_INDEX,
+  //       },
+  //     ],
+  //     headers: {
+  //       "Access-Control-Allow-Origin":
+  //         this.ipSvc.getFrontEndServerIP() + this.ipSvc.getAngularPort(),
+  //     },
+  //   });
+  // }
 
   /**
    * @description: Send ping to Elasticsearch server to check the server is alive
@@ -897,14 +1260,22 @@ export class ElasticsearchService {
    */
   async isAvailable(): Promise<boolean> {
     try {
-      return await this.client.ping({
-        index: this.ipSvc.ES_INDEX,
-        requestTimeout: 3000,
-        body: "ElasticSearch Works!",
-      });
+      // Send the request to the Flask middleware
+      let res = await this.getDataFromFlask('/es/ping');
+      return res; // Return the response from Flask
     } catch (error) {
-      return false;
+      console.error('Error in ping:', error);
+      throw error; // Propagate the error if needed
     }
+    // try {
+    //   return await this.client.ping({
+    //     index: this.ipSvc.ES_INDEX,
+    //     requestTimeout: 3000,
+    //     body: "ElasticSearch Works!",
+    //   });
+    // } catch (error) {
+    //   return false;
+    // }
   }
 
   //new
@@ -925,9 +1296,8 @@ export class ElasticsearchService {
     this.saveSearchResult(this.searchByDate(startIndex));
   }
 
-  searchByDate(startIndex?: number): Promise<any> {
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+  async searchByDate(startIndex?: number): Promise<any> {
+    const data = {
       from: startIndex,
       size: this.numDocsPerPage,
       body: {
@@ -942,7 +1312,32 @@ export class ElasticsearchService {
         },
       },
       _source: this.esQueryModel.getSearchSource(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByDate:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   from: startIndex,
+    //   size: this.numDocsPerPage,
+    //   body: {
+    //     query: {
+    //       range: {
+    //         post_date: {
+    //           gt: this.startDate,
+    //           lt: this.endDate,
+    //           format: "yyyy-MM-dd"
+    //         }
+    //       },
+    //     },
+    //   },
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   setSelectedKeyword(mustKeyword: string, mustNotKeyword: string){
@@ -959,12 +1354,11 @@ export class ElasticsearchService {
     this.saveSearchResult(this.searchByTextOption(startIndex, docSize));
   }
 
-  searchByTextOption(startIndex?: number, docSize?: number): Promise<any> {
+  async searchByTextOption(startIndex?: number, docSize?: number): Promise<any> {
     if (!startIndex) startIndex = 0;
     if (!docSize) docSize = this.numDocsPerPage;
 
-    return this.client.search({
-      index: this.ipSvc.ES_INDEX,
+    const data = {
       from: startIndex,
       size: docSize,
       filterPath: this.esQueryModel.getFilterPath(),
@@ -989,7 +1383,42 @@ export class ElasticsearchService {
         },
       },
       _source: this.esQueryModel.getSearchSource(),
-    });
+    }
+    try {
+      // Send the request to the Flask middleware
+      let res = await this.postDataToFlask('/es/search', data);
+      return res; // Return the response from Flask
+    } catch (error) {
+      console.error('Error in searchByDate:', error);
+      throw error; // Propagate the error if needed
+    }
+    // return this.client.search({
+    //   index: this.ipSvc.ES_INDEX,
+    //   from: startIndex,
+    //   size: docSize,
+    //   filterPath: this.esQueryModel.getFilterPath(),
+    //   body: {
+    //     post_filter: {
+    //       bool: {
+    //         must:
+    //           {
+    //             multi_match: {
+    //               query: this.mustKeyword,
+    //               fields: ["post_title", "file_extracted_content", "post_body"],
+    //             }
+    //           },
+    //         must_not:
+    //           {
+    //             multi_match: {
+    //               query: this.mustNotKeyword,
+    //               fields: ["post_title", "file_extracted_content", "post_body"],
+    //             }
+    //           }
+    //       }
+    //     },
+    //   },
+    //   _source: this.esQueryModel.getSearchSource(),
+    // });
   }
 
   setFirstChar(firstChar: string) {

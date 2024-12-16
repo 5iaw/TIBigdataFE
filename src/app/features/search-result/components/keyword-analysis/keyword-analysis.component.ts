@@ -280,7 +280,7 @@ export class KeywordAnalysisComponent implements OnInit, OnDestroy {
       var index = "search_log-" + y + "." + m;
       var count;
       try {
-        count = await this.elasticsearchService.getSearchHistory(index);
+        count = await this.elasticsearchService.getSearchHistory();
         const hist = {date: "" + y + "." + m, freq: count["count"]};
         searchHistory.push(hist);
       }
