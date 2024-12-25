@@ -22,6 +22,19 @@ export class MiddlewareService {
     private http: HttpClient,
   ) {}
 
+  transferEsToHDFS(esId: string, owner: string, path: string): Observable<any> {
+    const headers = new HttpHeaders().set("Content-Type", "application/json");
+    const payload = {
+      es_id: esId,
+      owner: owner,
+      path: path,
+    };
+
+    return this.http.post(`${this.baseUrl}/es/transfer`, payload, {
+      headers,
+      withCredentials: true, // Enable credentials for CORS
+    });
+  }
   // Get files and folders in a specific path
   getFileList(
     owner: string,

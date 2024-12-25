@@ -1,6 +1,6 @@
 <div class="read-container" *ngIf="article">
   <div class="read-body">
-    <h1 class="section-title">{{'search-result.viewDetails'|translate}}</h1>
+    <h1 class="section-title">{{ "search-result.viewDetails" | translate }}</h1>
     <section class="article-header">
       <p class="header-title">{{ article.post_title }}</p>
       <p class="header-writer">{{ article.post_writer }}</p>
@@ -17,15 +17,19 @@
 
     <ul class="article-info">
       <li *ngIf="!isDataEmpty(article.published_institution)" class="info">
-        <div class="info-title">{{'search-result.issuer'|translate}}</div>
+        <div class="info-title">{{ "search-result.issuer" | translate }}</div>
         <div class="info-content">{{ article.published_institution }}</div>
       </li>
       <li *ngIf="!isDataEmpty(article.post_date)" class="info">
-        <div class="info-title">{{'search-result.issueDates'|translate}}</div>
+        <div class="info-title">
+          {{ "search-result.issueDates" | translate }}
+        </div>
         <div class="info-content">{{ article.post_date }}</div>
       </li>
       <li *ngIf="!isDataEmpty(article.file_download_url)" class="info">
-        <div class="info-title">{{'search-result.browseData'|translate}}</div>
+        <div class="info-title">
+          {{ "search-result.browseData" | translate }}
+        </div>
         <div class="info-content">
           <a target="_blank" href="{{ article.file_download_url }}">
             {{ article.file_download_url }}</a
@@ -33,16 +37,22 @@
         </div>
       </li>
       <li *ngIf="!isDataEmpty(article.original_url)" class="info">
-        <div class="info-title">{{'search-result.documentSource'|translate}}</div>
+        <div class="info-title">
+          {{ "search-result.documentSource" | translate }}
+        </div>
         <div class="info-content">
-          <a target="_blank" href="{{ article.original_url }}"> {{ article.original_url }}</a>
+          <a target="_blank" href="{{ article.original_url }}">
+            {{ article.original_url }}</a
+          >
         </div>
       </li>
     </ul>
 
     <!-- 소제목들 -->
     <section *ngIf="!isDataEmpty(article.post_body)" class="article-index">
-      <h1 class="article-content-subtitle">{{'search-result.documentInfo'|translate}}</h1>
+      <h1 class="article-content-subtitle">
+        {{ "search-result.documentInfo" | translate }}
+      </h1>
       <hr />
       <p *ngIf="!isDataEmpty(article.post_body)" class="detail-body">
         {{ article.post_body }}
@@ -50,7 +60,9 @@
     </section>
 
     <section class="article-related">
-      <h1 class="article-content-subtitle">{{'search-result.relatedDocuments'|translate}}</h1>
+      <h1 class="article-content-subtitle">
+        {{ "search-result.relatedDocuments" | translate }}
+      </h1>
       <hr />
       <div class="detail-body">
         <ul>
@@ -63,22 +75,38 @@
       </div>
     </section>
 
+    <section class="article-transfer">
+      <h1 class="article-content-subtitle">Transfer Article</h1>
+      <hr />
+      <button
+        class="btn btn-primary"
+        (click)="transferToHDFS(article.hash_key)"
+      >
+        Transfer to HDFS
+      </button>
+      <p *ngIf="transferMessage" class="transfer-message">
+        {{ transferMessage }}
+      </p>
+    </section>
     <section class="article-wordcloud">
-      <h1 class="article-content-subtitle">{{'search-result.wordCloud'|translate}}</h1>
+      <h1 class="article-content-subtitle">
+        {{ "search-result.wordCloud" | translate }}
+      </h1>
       <hr />
       <p class="detail-body" *ngIf="0 === isCloudLoaded">
-        {{'search-result.underAnalysis'|translate}}
+        {{ "search-result.underAnalysis" | translate }}
       </p>
       <div class="wordcloud" *ngIf="0 < isCloudLoaded">
         <angular-tag-cloud
-          [realignOnResize] = "true"
-          [width] ="1"
+          [realignOnResize]="true"
+          [width]="1"
           [height]="1"
           [data]="cloudData"
           [step]="5"
-          [overflow] = "false"
-          [randomizeAngle] = "true"
-        > </angular-tag-cloud>
+          [overflow]="false"
+          [randomizeAngle]="true"
+        >
+        </angular-tag-cloud>
       </div>
     </section>
   </div>

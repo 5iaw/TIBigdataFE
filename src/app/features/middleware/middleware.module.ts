@@ -20,16 +20,17 @@ import { TransferComponent } from './components/transfer/transfer.component';  /
     AnalysisComponent,
     ElasticSearchComponent,
     UploadComponent,
-    TransferComponent
+    TransferComponent,
+    FileListComponent
   ],
     imports: [
       CommonModule,
       MiddlewareRoutingModule,
-      SharedModule,
       TranslateModule,
       FormsModule,
       HttpClientModule,
-      FormsModule],
+      FormsModule,
+  ],
     // exports: [ConnectionComponent, MiddlewareRoutingModule]
 })
 export class MiddlewareModule {}

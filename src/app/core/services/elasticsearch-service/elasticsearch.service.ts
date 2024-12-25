@@ -55,14 +55,14 @@ export class ElasticsearchService {
     //   this._connect();
     // }
   }
-  
+
 
   resetSearchFilterValue() {
 
   }
 
   async postDataToFlask(route:string, data: any): Promise<any> {
-        
+
     let res: QueryResponse = await this.http
         .post<any>(this.middleware_URL+route, data, {'headers':{'Content-Type': 'application/json'}})
         .toPromise();
@@ -78,7 +78,7 @@ export class ElasticsearchService {
 async getDataFromFlask(route: string): Promise<any> {
     const url = `${this.middleware_URL}${route}`; // Use your middleware URL dynamically
     console.log("Fetching data from", url);
-  
+
     try {
       const data = await this.http.get<any>(url).toPromise();
       if (!data) {
@@ -234,7 +234,7 @@ async getDataFromFlask(route: string): Promise<any> {
       filterPath: this.esQueryModel.getFilterPath(),
       _source: this.esQueryModel.getSearchSource()
     };
-  
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -287,7 +287,7 @@ async getDataFromFlask(route: string): Promise<any> {
       filterPath: this.esQueryModel.getFilterPath(),
       _source: this.esQueryModel.getSearchSource()
     };
-  
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -482,7 +482,7 @@ async getDataFromFlask(route: string): Promise<any> {
       filterPath: this.esQueryModel.getFilterPath(),
       _source: this.esQueryModel.getSearchSource()
     };
-  
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -520,7 +520,7 @@ async getDataFromFlask(route: string): Promise<any> {
       filterPath: this.esQueryModel.getFilterPath(),
       _source: this.esQueryModel.getSearchSource()
     };
-  
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -639,7 +639,7 @@ async getDataFromFlask(route: string): Promise<any> {
       body: this.getSearchFilterQuery(),
       _source: this.esQueryModel.getSearchSource()
     };
-  
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -881,7 +881,7 @@ async getDataFromFlask(route: string): Promise<any> {
         },
       }
     };
-  
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -1035,7 +1035,7 @@ async getDataFromFlask(route: string): Promise<any> {
       console.error('Error in searchByHashKey:', error);
       throw error; // Propagate the error if needed
     }
-    
+
     // return await this.client.search({
     //   index: this.ipSvc.ES_INDEX,
     //   body: {
@@ -1067,7 +1067,7 @@ async getDataFromFlask(route: string): Promise<any> {
       },
       _source: this.esQueryModel.getSearchSource(),
     };
-    
+
     try {
       // Send the request to the Flask middleware
       let res = await this.postDataToFlask('/es/search', data);
@@ -1113,7 +1113,7 @@ async getDataFromFlask(route: string): Promise<any> {
 
   async searchByLibrary(startIndex?: number, docSize?: number): Promise<any> {
     if (!startIndex) startIndex = 0;
-    
+
     const data = {
       from: startIndex,
       size: this.numDocsPerPage,
@@ -1183,7 +1183,7 @@ async getDataFromFlask(route: string): Promise<any> {
    * @returns query response
    */
   async countByInst(): Promise<any> {
-    
+
     const data = {
       body: {
         query: {
@@ -1444,5 +1444,5 @@ async getDataFromFlask(route: string): Promise<any> {
   getTopic():string{
     return this.topic
   }
-}
 
+}
