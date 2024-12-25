@@ -1,3 +1,4 @@
+// abstractAnalysisPage.ts
 import { Directive, Injectable, OnInit } from "@angular/core";
 import * as d3 from 'd3';
 import { AnalysisOnMiddlewareService } from "src/app/core/services/analysis-on-middleware-service/analysis.on.middleware.service";
@@ -85,7 +86,7 @@ export abstract class abstractAnalysis{
         let result = await this.middlewareService.postDataToFEDB('/textmining/getPreprocessedData', data);
         let tokens = Object.values(result.tokenList);
         let tokenData = new Array;
-       
+
         let tmp = new Array();
         let res = new Array();
 
@@ -140,7 +141,7 @@ export abstract class abstractAnalysis{
         let titles = Object.values(result.titleList);
         let tokens = Object.values(result.tokenList);
         let tokenData = new Array;
-       
+
         let tmp = new Array();
         let res = new Array();
 
@@ -173,13 +174,13 @@ export abstract class abstractAnalysis{
             str += line + '\r\n';
         }
         console.log(str);
-        
+
         const link = document.createElement("a");
         const fileName = selectedKeyword + '.csv';
         const blob = new Blob(["\uFEFF"+str], { type: 'text/csv; charset=utf-8'});
         const url = URL.createObjectURL(blob);
         $(link).attr({"download" : fileName, "href": url});
-        link.click();    
+        link.click();
     }
 
     /**

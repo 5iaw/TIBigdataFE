@@ -1,0 +1,83 @@
+<!-- file-list.component.html -->
+<div class="content-container">
+  <section class="content">
+    <h1 class="section-header">File Options</h1>
+
+    <div class="uploadfile">
+      <!-- Upload Section -->
+      <div class="upload-container">
+        <input
+          type="file"
+          (change)="onFileSelected($event)"
+          class="upload-dict"
+        />
+        <input
+          type="text"
+          [(ngModel)]="customFileName"
+          placeholder="Enter file name (without extension)"
+          class="upload-dict"
+        />
+        <button
+          class="upload-but"
+          (click)="uploadFile()"
+          [disabled]="!selectedFile || !customFileName.trim()"
+        >
+          Upload
+        </button>
+        <button class="upload-but" (click)="navigateUp()">Go Up</button>
+      </div>
+
+      <!-- File and Folder List -->
+      <ul class="file-list">
+        <li *ngFor="let file of fileList" class="file-item">
+          <div class="file-info">
+            <input
+              type="checkbox"
+              [(ngModel)]="file.selected"
+              (change)="toggleFileSelection(file)"
+            />
+            <span
+              *ngIf="file.type === 'folder'"
+              class="folder"
+              (click)="navigateToFolder(file)"
+            >
+              📁 {{ file.name }}
+            </span>
+            <span *ngIf="file.type !== 'folder'" class="file">
+              📄 {{ file.name }}
+            </span>
+          </div>
+
+          <div class="button-group">
+            <button
+              class="upload-but"
+              (click)="downloadFile(file.id, file.name)"
+            >
+              Download
+            </button>
+            <button class="upload-but" (click)="deleteFile(file)">
+              Delete
+            </button>
+            <button class="upload-but" (click)="renameFile(file)">
+              Rename
+            </button>
+            <button class="upload-but" (click)="moveFile(file)">Move</button>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Create Folder Section -->
+      <div class="folder-creation">
+        <input
+          type="text"
+          [(ngModel)]="newFolderName"
+          placeholder="New folder name"
+          class="upload-dict"
+        />
+        <button class="upload-but" (click)="createNewFolder()">
+          Create Folder
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

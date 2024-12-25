@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService } from "@ngx-translate/core";
 
 @Component({
   selector: "app-analysis-menu",
@@ -10,8 +10,10 @@ import { TranslateService } from '@ngx-translate/core';
 export class AnalysisMenuComponent implements OnInit {
   private _title: string = "";
   private _currentMenu: string = "";
-  constructor(private router: Router,
-              private translate: TranslateService) { }
+  constructor(
+    private router: Router,
+    private translate: TranslateService,
+  ) {}
 
   ngOnInit(): void {
     let url = this.router.url.split("/");
@@ -20,11 +22,11 @@ export class AnalysisMenuComponent implements OnInit {
   }
 
   selectedStyleObject(flag: boolean): Object {
-    if(matchMedia("(max-width: 425px)").matches) {
+    if (matchMedia("(max-width: 425px)").matches) {
       if (flag) {
         return {
           "font-weight": "bold",
-          "border-bottom" : "0.2rem solid #0FBAFF",
+          "border-bottom": "0.2rem solid #0FBAFF",
         };
       } else {
         return {
@@ -32,7 +34,7 @@ export class AnalysisMenuComponent implements OnInit {
           "background-color": "white",
         };
       }
-    }else{
+    } else {
       if (flag) {
         return {
           color: "#0FBAFF",
@@ -51,10 +53,14 @@ export class AnalysisMenuComponent implements OnInit {
    * @param currentAddress
    */
   setTitle(currentAddress: string) {
-    if (currentAddress === "manual") this.title = this.translate.instant('메뉴얼');
-    if (currentAddress === "preprocessing") this.title = this.translate.instant('전처리');
-    if (currentAddress === "analysis") this.title = this.translate.instant('자료분석');
-    if (currentAddress === "file-list") this.title = this.translate.instant('file-list');
+    if (currentAddress === "manual")
+      this.title = this.translate.instant("메뉴얼");
+    if (currentAddress === "preprocessing")
+      this.title = this.translate.instant("전처리");
+    if (currentAddress === "analysis")
+      this.title = this.translate.instant("자료분석");
+    if (currentAddress === "file-list")
+      this.title = this.translate.instant("file-list");
   }
 
   toManual() {

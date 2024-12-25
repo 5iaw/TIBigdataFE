@@ -1,7 +1,7 @@
 // analysis.component.ts
 import { Component, Injectable, OnInit } from "@angular/core";
 import { abstractAnalysis } from "../abstractAnalysisPage";
-import * as d3 from 'd3';
+import * as d3 from "d3";
 import { Tooltip } from "chart.js";
 import * as lda from "./ldavis.v3.0.0.js";
 import { svgAsPngUri, saveSvgAsPng } from "save-svg-as-png";
@@ -9,6 +9,7 @@ import { Router } from "@angular/router";
 import { interval } from "rxjs";
 import { concatMap, takeWhile, switchMap, delay } from "rxjs/operators";
 import { HttpClient, HttpParams } from "@angular/common/http";
+import { FileSystemEntity } from "src/app/features/middleware/models/FileSystemEntity.model";
 
 // @Injectable({
 //   providedIn: "root",
@@ -17,17 +18,16 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 @Component({
   selector: "app-analysis",
   templateUrl: "./analysis.component.html",
-  styleUrls: ['../../analysis-style.less'],
+  styleUrls: ["../../analysis-style.less"],
 })
-
-export class AnalysisComponent extends abstractAnalysis implements OnInit  {
-
+export class AnalysisComponent extends abstractAnalysis implements OnInit {
   private _isDataAnalysised: boolean = false;
   public _analysisedData: any;
 
-  private margin = 50;  private margina = {top: 10, right: 30, bottom: 30, left: 40};
-  private width = 800 - (this.margin * 2);
-  private height = 480 - (this.margin * 2);
+  private margin = 50;
+  private margina = { top: 10, right: 30, bottom: 30, left: 40 };
+  private width = 800 - this.margin * 2;
+  private height = 480 - this.margin * 2;
   public optionValue1: string;
   public optionValue2: string;
   public optionValue3: string;
@@ -51,21 +51,20 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //       _userSavedDocumentService);
   //  }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   /**
-  * @description show pop up when the analysis name is on click
-  */
+   * @description show pop up when the analysis name is on click
+   */
   showPop(analName: string) {
-    if (document.getElementById(analName).style.display == 'inline') {
-      document.getElementById(analName).style.display = 'none'
-      document.getElementById(analName + "-head").style.background = 'none';
-      document.getElementById(analName + "-head").style.color = 'black';
-    }
-    else {
-      document.getElementById(analName).style.display = 'inline';
-      document.getElementById(analName + "-head").style.background = '#52B9FF';
-      document.getElementById(analName + "-head").style.color = 'white';
+    if (document.getElementById(analName).style.display == "inline") {
+      document.getElementById(analName).style.display = "none";
+      document.getElementById(analName + "-head").style.background = "none";
+      document.getElementById(analName + "-head").style.color = "black";
+    } else {
+      document.getElementById(analName).style.display = "inline";
+      document.getElementById(analName + "-head").style.background = "#52B9FF";
+      document.getElementById(analName + "-head").style.color = "white";
     }
   }
 
@@ -74,7 +73,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
    */
 
   // async runAnalysis(analysis:string): Promise<void>{
-
 
   //   // Check the options
   //   if(this.selectedSavedDate==null) return alert('문서를 선택해주세요!');
@@ -123,7 +121,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //   //   temp.push({word:Object.keys(this.analysisedData)[i], count:this.analysisedData[Object.keys(this.analysisedData)[i]]});
   //   // }
 
-
   //   if(analysis=='count'|| analysis=='tfidf'){
   //     this.drawTable(analysis, JSON.stringify(this.analysisedData.result_graph));
   //     this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
@@ -152,28 +149,130 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //   alert("분석 완료되었습니다.");
   //   this.closeLoadingWithMask();
   // }
+  private selectedFiles: FileSystemEntity[] = []; // Store the selected files
 
+  onSelectedFilesChange(files: FileSystemEntity[]): void {
+    this.selectedFiles = files; // Update the selected files
+    console.log("Selected files updated:", this.selectedFiles);
+  }
+
+  async combinedRunAnalysis(analysis: string): Promise<void> {
+    // Ensure at least one data source is selected
+    // if (!this.selectedSavedDate && this.selectedFiles.length === 0) {
+    //   alert("Please select a preprocessed document or at least one file.");
+    //   return;
+    // }
+
+    // Check for preprocessed document validity
+    if (this.selectedSavedDate && !this.isSelectedPreprocessed) {
+      alert(
+        "The selected document has not been preprocessed. Please preprocess it first!",
+      );
+      return;
+    }
+
+    // Retrieve options from the input fields
+    const option1 =
+      (<HTMLInputElement>document.getElementById(analysis + "_option1"))
+        ?.value || null;
+    const option2 =
+      (<HTMLInputElement>document.getElementById(analysis + "_option2"))
+        ?.value || null;
+    const option3 =
+      (<HTMLInputElement>document.getElementById(analysis + "_option3"))
+        ?.value || null;
+
+    // Prepare the data payload dynamically
+    const data = JSON.stringify({
+      userEmail: this.email,
+      keyword: this.selectedSavedDate ? this.selectedKeyword : null, // Include keyword if a document is selected
+      savedDate: this.selectedSavedDate || null, // Include savedDate if a document is selected
+      selectedFiles:
+        this.selectedFiles.length > 0
+          ? this.selectedFiles.map((file) => ({
+              id: file.id,
+              name: file.name,
+              path: file.path,
+            }))
+          : null, // Include files if selected
+      options: {
+        option1: option1,
+        option2: option2,
+        option3: option3,
+      },
+      analysisName: analysis,
+    });
+
+    // Show loading indicator
+    this.LoadingWithMask();
+    document
+      .getElementById("cancelbtn")
+      ?.addEventListener("click", this.closeLoadingWithMask);
+
+    // Send the combined analysis request to the backend
+    try {
+      const response = await this.middlewareService.postDataToFlask(
+        "/spark/submit_combined_job",
+        data,
+      );
+
+      if (!response || response.state !== "starting") {
+        alert("Combined analysis submission failed. Please try again.");
+        this.closeLoadingWithMask();
+        return;
+      }
+
+      // Update job details and start polling for status
+      this.output_path = response.output_path;
+      this.jobId = response.id;
+      this.jobStatus = "Job submitted, waiting for completion...";
+
+      console.log("Combined analysis job submitted successfully:", response);
+      this.pollJobStatus();
+    } catch (error) {
+      console.error("Error submitting combined analysis:", error);
+      alert("An error occurred. Please try again later.");
+    } finally {
+      this.closeLoadingWithMask();
+    }
+  }
   async runAnalysis(analysis: string): Promise<void> {
-
     // Check the options
-    if (this.selectedSavedDate == null) return alert('문서를 선택해주세요!');
-    if (!this.isSelectedPreprocessed) return alert('선택하신 문서는 전처리되지 않은 문서입니다. 전처리를 먼저 해주세요!');
-    this.optionValue1 = (<HTMLInputElement>document.getElementById(analysis + '_option1')) != null ? (<HTMLInputElement>document.getElementById(analysis + '_option1')).value : null;
-    this.optionValue2 = (<HTMLInputElement>document.getElementById(analysis + '_option2')) != null ? (<HTMLInputElement>document.getElementById(analysis + '_option2')).value : null;
-    this.optionValue3 = (<HTMLInputElement>document.getElementById(analysis + '_option3')) != null ? (<HTMLInputElement>document.getElementById(analysis + '_option3')).value : null;
+    if (this.selectedSavedDate == null) return alert("문서를 선택해주세요!");
+    if (!this.isSelectedPreprocessed)
+      return alert(
+        "선택하신 문서는 전처리되지 않은 문서입니다. 전처리를 먼저 해주세요!",
+      );
+    this.optionValue1 =
+      <HTMLInputElement>document.getElementById(analysis + "_option1") != null
+        ? (<HTMLInputElement>document.getElementById(analysis + "_option1"))
+            .value
+        : null;
+    this.optionValue2 =
+      <HTMLInputElement>document.getElementById(analysis + "_option2") != null
+        ? (<HTMLInputElement>document.getElementById(analysis + "_option2"))
+            .value
+        : null;
+    this.optionValue3 =
+      <HTMLInputElement>document.getElementById(analysis + "_option3") != null
+        ? (<HTMLInputElement>document.getElementById(analysis + "_option3"))
+            .value
+        : null;
 
     this.LoadingWithMask();
-    document.getElementById("cancelbtn").addEventListener("click", this.closeLoadingWithMask);
+    document
+      .getElementById("cancelbtn")
+      .addEventListener("click", this.closeLoadingWithMask);
 
     this.analysis = analysis;
     let data = JSON.stringify({
-      'userEmail': this.email,
-      'keyword': this.selectedKeyword,
-      'savedDate': this.selectedSavedDate,
-      'option1': this.optionValue1,
-      'option2': this.optionValue2,
-      'option3': this.optionValue3,
-      'analysisName': analysis,
+      userEmail: this.email,
+      keyword: this.selectedKeyword,
+      savedDate: this.selectedSavedDate,
+      option1: this.optionValue1,
+      option2: this.optionValue2,
+      option3: this.optionValue3,
+      analysisName: analysis,
     });
 
     this.clearResult();
@@ -181,7 +280,10 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     // Send Requests to Flask
     // let res = await this.middlewareService.postDataToMiddleware('/textmining',data);
 
-    let res = await this.middlewareService.postDataToFlask('/spark/submit_job', data);
+    let res = await this.middlewareService.postDataToFlask(
+      "/spark/submit_job",
+      data,
+    );
     console.log(res);
     console.log("testing res.errMsg" + res.errMsg);
     console.log("testing res.returnCode");
@@ -193,13 +295,13 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       return;
     }
 
-    if (res.state != 'starting') {
+    if (res.state != "starting") {
       console.log(res);
       alert(res);
       this.closeLoadingWithMask();
 
       return;
-    };
+    }
 
     console.log("Job submitted successfully:", res);
     this.output_path = res.output_path;
@@ -216,7 +318,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     // // for (let i=0;i< Object.keys(this.analysisedData).length;i++){
     // //   temp.push({word:Object.keys(this.analysisedData)[i], count:this.analysisedData[Object.keys(this.analysisedData)[i]]});
     // // }
-
 
     // if(analysis=='count'|| analysis=='tfidf'){
     //   this.drawTable(analysis, JSON.stringify(this.analysisedData.result_graph));
@@ -306,7 +407,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     }
   }
 
-
   // Remember to check jobId
   // getJobStatus(jobId: number) {
   //   const url = `${this.middlewareUrl}/status/${jobId}`; // Flask backend URL (update the port if needed)
@@ -314,7 +414,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //   return this.http.get<{ state: string }>(url);
   // }
   async getJobStatus(jobId: number): Promise<{ state: string }> {
-    const url = `/spark/status/${jobId}`;  // Route relative to middleware URL
+    const url = `/spark/status/${jobId}`; // Route relative to middleware URL
     console.log("Getting job status from", `/spark${url}`);
 
     try {
@@ -329,8 +429,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       throw error;
     }
   }
-
-
 
   // getAnalysisResult() {
   //   const url = `${this.middlewareUrl}/read_file?output_path=${encodeURIComponent(this.output_path)}`;
@@ -363,7 +461,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //   );
   // }
   async getAnalysisResult(): Promise<void> {
-    const url = `/spark/read_file?output_path=${this.output_path}`;  // Route relative to middleware URL
+    const url = `/spark/read_file?output_path=${this.output_path}`; // Route relative to middleware URL
     console.log("Getting analysis result from", `/spark${url}`);
 
     try {
@@ -382,43 +480,48 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     }
   }
 
-
-
   drawResultVisualizations(): void {
     if (this.analysisedData && this.analysisedData.result_graph) {
       console.log("Drawing visualizations...");
       // Add visualization logic here
-      if (this.analysis === 'count' || this.analysis === 'tfidf') {
-        this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_graph));
-        console.log('Done drawing table!')
+      if (this.analysis === "count" || this.analysis === "tfidf") {
+        this.drawTable(
+          this.analysis,
+          JSON.stringify(this.analysisedData.result_graph),
+        );
+        console.log("Done drawing table!");
         this.drawBarChart(JSON.stringify(this.analysisedData.result_graph));
-        console.log('Done drawing chart!')
-      }
-      else if (this.analysis == 'network') {
+        console.log("Done drawing chart!");
+      } else if (this.analysis == "network") {
         // this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_table));
         this.drawNetworkChart(JSON.stringify(this.analysisedData.result_graph));
-      }
-      else if (this.analysis == 'ngrams') {
+      } else if (this.analysis == "ngrams") {
         this.drawNetworkChart(JSON.stringify(this.analysisedData.result_graph));
-      }
-      else if (this.analysis == 'kmeans') {
-        this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_graph));
-        console.log('Done drawing table!')
+      } else if (this.analysis == "kmeans") {
+        this.drawTable(
+          this.analysis,
+          JSON.stringify(this.analysisedData.result_graph),
+        );
+        console.log("Done drawing table!");
         this.drawScatterChart(JSON.stringify(this.analysisedData.result_graph));
-        console.log('Done drawing scatter chart!')
-      }
-      else if (this.analysis == 'word2vec') {
+        console.log("Done drawing scatter chart!");
+      } else if (this.analysis == "word2vec") {
         // this.drawTable(analysis, JSON.stringify(this.analysisedData.result_graph));
-        this.drawScatterWordChart(JSON.stringify(this.analysisedData.result_graph));
-      }
-      else if (this.analysis == 'hcluster')
+        this.drawScatterWordChart(
+          JSON.stringify(this.analysisedData.result_graph),
+        );
+      } else if (this.analysis == "hcluster")
         this.drawTreeChart(JSON.stringify(this.analysisedData.result_graph));
       // }
-      else if (this.analysis == 'topicLDA')
-        this.drawTopicModeling(JSON.stringify(this.analysisedData.result_graph));
-
-      else if (this.analysis == 'ner')
-        this.drawTable(this.analysis, JSON.stringify(this.analysisedData.result_graph));
+      else if (this.analysis == "topicLDA")
+        this.drawTopicModeling(
+          JSON.stringify(this.analysisedData.result_graph),
+        );
+      else if (this.analysis == "ner")
+        this.drawTable(
+          this.analysis,
+          JSON.stringify(this.analysisedData.result_graph),
+        );
 
       alert("분석 완료되었습니다.");
       this.closeLoadingWithMask();
@@ -431,53 +534,51 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   drawTable(analType: string, data_str: string) {
     let data: any = JSON.parse(data_str);
 
-    const table = d3.select("figure#table")
-      .attr('class', 'result-pretable')
+    const table = d3
+      .select("figure#table")
+      .attr("class", "result-pretable")
       .append("table")
-      .attr('width', '100%')
-      .attr('height', '300px')
+      .attr("width", "100%")
+      .attr("height", "300px");
 
-    if (analType == 'count' || analType == 'tfidf') {
-      const th = table.append("tr")
-        .style('padding', '15px 0px')
-        .style('font-weight', '500')
-        .style('text-align', 'center');
+    if (analType == "count" || analType == "tfidf") {
+      const th = table
+        .append("tr")
+        .style("padding", "15px 0px")
+        .style("font-weight", "500")
+        .style("text-align", "center");
 
-      th.append('th').text('No');
-      th.append('th').text('단어');
-      th.append('th').text('값');
+      th.append("th").text("No");
+      th.append("th").text("단어");
+      th.append("th").text("값");
 
-      const tbody = table.append("tbody")
-        .style('text-align', 'center');
+      const tbody = table.append("tbody").style("text-align", "center");
 
       for (let i = 0; i < data.length; i++) {
         const tr = tbody.append("tr");
         tr.append("td").text(i + 1);
-        tr.append("td").text(data[i]['word']);
-        tr.append("td").text(data[i]['value']);
+        tr.append("td").text(data[i]["word"]);
+        tr.append("td").text(data[i]["value"]);
       }
-    }
+    } else if (analType == "kmeans") {
+      console.log("KMeans table : ");
+      const th = table
+        .append("tr")
+        .style("padding", "15px 0px")
+        .style("font-weight", "500")
+        .style("text-align", "center");
 
-    else if (analType == 'kmeans') {
-      console.log('KMeans table : ');
-      const th = table.append("tr")
-        .style('padding', '15px 0px')
-        .style('font-weight', '500')
-        .style('text-align', 'center');
-
-      th.append('th').text('category');
-      th.append('th').text('title');
+      th.append("th").text("category");
+      th.append("th").text("title");
       // th.append('th').text('값');
-      console.log('Table headers created', th);
+      console.log("Table headers created", th);
 
-      const tbody = table.append("tbody")
-        .style('text-align', 'center');
+      const tbody = table.append("tbody").style("text-align", "center");
 
       let max = 0;
       for (let i = 0; i < data.length; i++) {
         console.log(`Checking data[${i}]:`, data[i]);
-        if (data[i]['category'] > max)
-          max = data[i]['category'];
+        if (data[i]["category"] > max) max = data[i]["category"];
         console.log(`New max category found: ${max}`);
       }
 
@@ -491,9 +592,9 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         let categoryCount = 0;
         for (let j = 0; j < data.length; j++) {
           console.log(`Checking if data[${j}]['category'] == ${i}`);
-          if (data[j]['category'] == i) {
-            console.log(`Adding title to category ${i}:`, data[j]['title']);
-            td.append("ul").text(data[j]['title']);
+          if (data[j]["category"] == i) {
+            console.log(`Adding title to category ${i}:`, data[j]["title"]);
+            td.append("ul").text(data[j]["title"]);
             categoryCount++;
           }
         }
@@ -502,63 +603,59 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         }
         // tr.append("td").text(data[i]['value']);
       }
-      console.log('KMeans analysis completed');
-    }
-      else if(analType=='ner'){
-        const th = table.append("thead").append("tr")
-            .style('padding', '15px 0px')
-            .style('font-weight', '500')
-            .style('text-align', 'center');
+      console.log("KMeans analysis completed");
+    } else if (analType == "ner") {
+      const th = table
+        .append("thead")
+        .append("tr")
+        .style("padding", "15px 0px")
+        .style("font-weight", "500")
+        .style("text-align", "center");
 
-        th.append('th').text('No');
-        th.append('th').text('단어');
-        th.append('th').text('품사');
+      th.append("th").text("No");
+      th.append("th").text("단어");
+      th.append("th").text("품사");
 
-        // Create table body
-        const tbody = table.append("tbody")
-            .style('text-align', 'center');
+      // Create table body
+      const tbody = table.append("tbody").style("text-align", "center");
 
-        console.log("Start appending rows...");  // Debug line to indicate the start of row appending
+      console.log("Start appending rows..."); // Debug line to indicate the start of row appending
 
-        // Loop through data and create rows for each entry
-        data.forEach((item, index) => {
-            console.log("Row Data - Word:", item['word'], "POS:", item['value']);  // Debug line to check each row's data
+      // Loop through data and create rows for each entry
+      data.forEach((item, index) => {
+        console.log("Row Data - Word:", item["word"], "POS:", item["value"]); // Debug line to check each row's data
 
-            const tr = tbody.append("tr");
+        const tr = tbody.append("tr");
 
-            // Add table cells for "No", "단어", and "품사"
-            tr.append("td").text(index + 1);  // No
-            tr.append("td").text(item['word']);  // 단어 (Word)
-            tr.append("td").text(item['value']);  // 품사 (POS Tag)
+        // Add table cells for "No", "단어", and "품사"
+        tr.append("td").text(index + 1); // No
+        tr.append("td").text(item["word"]); // 단어 (Word)
+        tr.append("td").text(item["value"]); // 품사 (POS Tag)
 
-            console.log("Row appended for index:", index + 1);  // Debug line to confirm row is added
-        });
+        console.log("Row appended for index:", index + 1); // Debug line to confirm row is added
+      });
 
-        console.log("Finished appending rows.");
+      console.log("Finished appending rows.");
+    } else if (analType == "network") {
+      const th = table
+        .append("tr")
+        .style("padding", "15px 0px")
+        .style("font-weight", "500")
+        .style("text-align", "center");
 
-
-    }
-
-    else if (analType == 'network') {
-      const th = table.append("tr")
-        .style('padding', '15px 0px')
-        .style('font-weight', '500')
-        .style('text-align', 'center');
-
-      th.append('th').attr('width', '10%').text('index');
-      th.append('th').attr('width', '18%').text('사이중심성');
-      th.append('th').attr('width', '18%').text('근접중심성');
-      th.append('th').attr('width', '18%').text('빈도수');
-      th.append('th').attr('width', '18%').text('연결중심성');
-      th.append('th').attr('width', '18%').text('eigenvector');
+      th.append("th").attr("width", "10%").text("index");
+      th.append("th").attr("width", "18%").text("사이중심성");
+      th.append("th").attr("width", "18%").text("근접중심성");
+      th.append("th").attr("width", "18%").text("빈도수");
+      th.append("th").attr("width", "18%").text("연결중심성");
+      th.append("th").attr("width", "18%").text("eigenvector");
 
       // th.append('th').text('값');
 
       console.log(data);
-      const tbody = table.append("tbody")
-        .style('text-align', 'center');
+      const tbody = table.append("tbody").style("text-align", "center");
 
-      for (let i = 0; i < data['between_cen'].length; i++) {
+      for (let i = 0; i < data["between_cen"].length; i++) {
         const tr = tbody.append("tr");
         tr.append("td").text(i + 1);
         // tr.append("td").text(data['between_cen'][i]['word']+'/'+ Math.floor(data['between_cen'][i]['value']*1000)/1000);
@@ -567,11 +664,31 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         // tr.append("td").text(data['degree_cen'][i]['word']+'/'+ Math.floor(data['degree_cen'][i]['value']*1000)/1000);
         // tr.append("td").text(data['eigenvector_cen'][i]['word']+'/'+ Math.floor(data['eigenvector_cen'][i]['value']*1000)/1000);
 
-        tr.append("td").text(data['between_cen'][i]['word'] + '/' + data['between_cen'][i]['value'].toExponential(3));
-        tr.append("td").text(data['closeness_cen'][i]['word'] + '/' + data['closeness_cen'][i]['value'].toExponential(3));
-        tr.append("td").text(data['count'][i]['word'] + '/' + data['count'][i]['value'].toExponential(3));
-        tr.append("td").text(data['degree_cen'][i]['word'] + '/' + data['degree_cen'][i]['value'].toExponential(3));
-        tr.append("td").text(data['eigenvector_cen'][i]['word'] + '/' + data['eigenvector_cen'][i]['value'].toExponential(3));
+        tr.append("td").text(
+          data["between_cen"][i]["word"] +
+            "/" +
+            data["between_cen"][i]["value"].toExponential(3),
+        );
+        tr.append("td").text(
+          data["closeness_cen"][i]["word"] +
+            "/" +
+            data["closeness_cen"][i]["value"].toExponential(3),
+        );
+        tr.append("td").text(
+          data["count"][i]["word"] +
+            "/" +
+            data["count"][i]["value"].toExponential(3),
+        );
+        tr.append("td").text(
+          data["degree_cen"][i]["word"] +
+            "/" +
+            data["degree_cen"][i]["value"].toExponential(3),
+        );
+        tr.append("td").text(
+          data["eigenvector_cen"][i]["word"] +
+            "/" +
+            data["eigenvector_cen"][i]["value"].toExponential(3),
+        );
         // tr.append("td").text(data[i]['value']);
       }
     }
@@ -582,7 +699,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
    */
 
   drawBarChart(data_str: string) {
-    let data: Array<{ word: string, value: number }> = JSON.parse(data_str);
+    let data: Array<{ word: string; value: number }> = JSON.parse(data_str);
 
     // console.log(data);
     // let data=[
@@ -592,73 +709,93 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     //   {word:"박근혜",count:8}
     // ];
 
-    let margin = ({ top: 20, right: 0, bottom: 30, left: 40 });
+    let margin = { top: 20, right: 0, bottom: 30, left: 40 };
     let width = 1000;
     let height = 500;
 
     function zoom(svg) {
-      const extent: [[number, number], [number, number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
+      const extent: [[number, number], [number, number]] = [
+        [margin.left, margin.top],
+        [width - margin.right, height - margin.top],
+      ];
 
-      svg.call(d3.zoom()
-        .scaleExtent([1, 8])
-        .translateExtent(extent)
-        .extent(extent)
-        .on("zoom", zoomed));
+      svg.call(
+        d3
+          .zoom()
+          .scaleExtent([1, 8])
+          .translateExtent(extent)
+          .extent(extent)
+          .on("zoom", zoomed),
+      );
 
       function zoomed(event) {
-        x.range([margin.left, width - margin.right].map(d => event.transform.applyX(d)));
-        svg.selectAll(".bars rect").attr("x", d => x(d.word)).attr("width", x.bandwidth());
+        x.range(
+          [margin.left, width - margin.right].map((d) =>
+            event.transform.applyX(d),
+          ),
+        );
+        svg
+          .selectAll(".bars rect")
+          .attr("x", (d) => x(d.word))
+          .attr("width", x.bandwidth());
         svg.selectAll(".x-axis").call(xAxis);
       }
     }
 
-    const xAxis = g => g
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickSizeOuter(0))
+    const xAxis = (g) =>
+      g
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).tickSizeOuter(0));
 
-    const yAxis = g => g
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
-      .call(g => g.select(".domain").remove())
+    const yAxis = (g) =>
+      g
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y))
+        .call((g) => g.select(".domain").remove());
 
     // Create the X-axis band scale
-    const x = d3.scaleBand()
-      .domain(data.map(d => d.word))
+    const x = d3
+      .scaleBand()
+      .domain(data.map((d) => d.word))
       .range([margin.left, width - margin.right])
-      .padding(0.1)
+      .padding(0.1);
 
     // Create the Y-axis band scale
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value)]).nice()
-      .range([height - margin.bottom, margin.top])
+    const y = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.value)])
+      .nice()
+      .range([height - margin.bottom, margin.top]);
 
-    const svg = d3.select("figure#bar")
+    const svg = d3
+      .select("figure#bar")
       .append("svg")
       .attr("id", "svgstart")
       .attr("viewBox", "0, 0," + width + "," + height)
       .call(zoom);
 
     // Draw bars
-    svg.append("g")
+    svg
+      .append("g")
       .attr("class", "bars")
       .attr("fill", "steelblue")
       .selectAll("rect")
       .data(data)
       .join("rect")
-      .attr("x", d => x(d.word))
-      .attr("y", d => y(d.value))
-      .attr("height", d => y(0) - y(d.value))
+      .attr("x", (d) => x(d.word))
+      .attr("y", (d) => y(d.value))
+      .attr("height", (d) => y(0) - y(d.value))
       .attr("width", x.bandwidth())
       .on("mouseover", function (e, d) {
         tooltip
           .html("Word: " + d.word + "<br>" + "Value: " + d.value)
-          .style("opacity", 1)
-        d3.select(this).attr("fill", "red")
+          .style("opacity", 1);
+        d3.select(this).attr("fill", "red");
       })
       .on("mousemove", function (e, d) {
         tooltip
-          .style("left", (e.pageX + 20) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-          .style("top", (e.pageY) + "px")
+          .style("left", e.pageX + 20 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+          .style("top", e.pageY + "px");
       })
       .on("mouseout", function () {
         d3.select(this).attr("fill", "steelblue");
@@ -666,7 +803,8 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       });
 
     // Draw the X-axis on the DOM
-    svg.append("g")
+    svg
+      .append("g")
       .attr("class", "x-axis")
       .call(xAxis)
       .selectAll("text")
@@ -674,12 +812,11 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       .style("text-anchor", "end");
 
     // Draw the Y-axis on the DOM
-    svg.append("g")
-      .attr("class", "y-axis")
-      .call(yAxis);
+    svg.append("g").attr("class", "y-axis").call(yAxis);
 
     // Draw a tooltip
-    const tooltip = d3.select("figure#bar")
+    const tooltip = d3
+      .select("figure#bar")
       .append("div")
       .style("opacity", 0)
       .style("position", "absolute")
@@ -696,83 +833,97 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
 
   drawScatterChart(data_str: string) {
     let data: Array<{
-      "category": number,
-      "title": string,
-      "x": number,
-      "y": number
+      category: number;
+      title: string;
+      x: number;
+      y: number;
     }> = JSON.parse(data_str);
 
-    let margin = ({ top: 10, right: 30, bottom: 30, left: 60 });
+    let margin = { top: 10, right: 30, bottom: 30, left: 60 };
     let width = 750 - margin.left - margin.right;
     let height = 750 - margin.top - margin.bottom;
 
-
     function zoom(svg) {
-      const extent: [[number, number], [number, number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
+      const extent: [[number, number], [number, number]] = [
+        [margin.left, margin.top],
+        [width - margin.right, height - margin.top],
+      ];
 
-      svg.call(d3.zoom()
-        .scaleExtent([1, 8])
-        .translateExtent(extent)
-        .extent(extent)
-        .on("zoom", zoomed));
+      svg.call(
+        d3
+          .zoom()
+          .scaleExtent([1, 8])
+          .translateExtent(extent)
+          .extent(extent)
+          .on("zoom", zoomed),
+      );
 
       function zoomed(event) {
-        x.range([margin.left, width - margin.right].map(d => event.transform.applyX(d)));
-        svg.selectAll(".dots circle").attr("x", d => x(d.x))//.attr("width", x.bandwidth());
+        x.range(
+          [margin.left, width - margin.right].map((d) =>
+            event.transform.applyX(d),
+          ),
+        );
+        svg.selectAll(".dots circle").attr("x", (d) => x(d.x)); //.attr("width", x.bandwidth());
         svg.selectAll(".x-axis").call(xAxis);
       }
     }
 
-
     // Add X axis
-    const x = d3.scaleLinear()
-      .domain([d3.min(data, d => d.x), d3.max(data, d => d.x)])
+    const x = d3
+      .scaleLinear()
+      .domain([d3.min(data, (d) => d.x), d3.max(data, (d) => d.x)])
       .range([0, width]);
 
     // Add Y axis
-    const y = d3.scaleLinear()
-      .domain([d3.min(data, d => d.y), d3.max(data, d => d.y)])
+    const y = d3
+      .scaleLinear()
+      .domain([d3.min(data, (d) => d.y), d3.max(data, (d) => d.y)])
       .range([height, 0]);
 
     // append the svg object to the body of the page
-    const svg = d3.select("figure#scatter")
+    const svg = d3
+      .select("figure#scatter")
       .append("svg")
       .attr("id", "svgstart")
       // .attr("width", width + margin.left + margin.right)
       // .attr("height", height + margin.top + margin.bottom)
-      .attr("viewBox", "0, 0," + (width + margin.left + margin.right) + "," + (height + margin.top + margin.bottom))
+      .attr(
+        "viewBox",
+        "0, 0," +
+          (width + margin.left + margin.right) +
+          "," +
+          (height + margin.top + margin.bottom),
+      )
       .call(zoom)
       .append("g")
-      .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    const xAxis = (g) =>
+      g
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickSizeOuter(0));
 
-    const xAxis = g => g
-      .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickSizeOuter(0))
-
-    const yAxis = g => g
-      // .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
+    const yAxis = (g) =>
+      g
+        // .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
     // .call(g => g.select(".domain").remove())
 
     // Draw x-axis
-    svg.append("g")
-      .call(xAxis)
+    svg.append("g").call(xAxis);
     // .attr("transform", "translate(0," + height + ")")
     // .call(d3.axisBottom(x));
 
     // Draw y-axis
-    svg.append("g")
-      .call(yAxis)
+    svg.append("g").call(yAxis);
     // .call(d3.axisLeft(y));
 
-
     // Color scale: give me a specie name, I return a color
-    const color = d3.scaleSequential()
-      .domain([0, d3.max(data, d => d.category)])
-      .interpolator(d3.interpolateSinebow)
-
+    const color = d3
+      .scaleSequential()
+      .domain([0, d3.max(data, (d) => d.category)])
+      .interpolator(d3.interpolateSinebow);
 
     // console.log(color('0'));
     // Highlight the specie that is hovered
@@ -785,21 +936,20 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         .transition()
         .duration(200)
         .style("fill", "lightgrey")
-        .attr("r", 3)
+        .attr("r", 3);
 
       d3.selectAll(".type" + category)
         .transition()
         .duration(200)
         .style("fill", colorset)
-        .attr("r", 7)
+        .attr("r", 7);
 
       tooltip
         .html("Title: " + d.title + "<br>category: " + d.category)
-        .style("opacity", 1)
+        .style("opacity", 1);
 
-      d3.selectAll(".dottext")
-        .style("opacity", 0)
-    }
+      d3.selectAll(".dottext").style("opacity", 0);
+    };
 
     // Highlight the specie that is hovered
     const doNotHighlight = function (e, d) {
@@ -807,35 +957,42 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         .transition()
         .duration(200)
         .style("fill", "lightgrey")
-        .attr("r", 5)
+        .attr("r", 5);
 
       tooltip
         .style("opacity", 0)
         .style("left", "0px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
         .style("top", "0px");
 
-      d3.selectAll(".dottext")
-        .style("opacity", 1)
-    }
-
+      d3.selectAll(".dottext").style("opacity", 1);
+    };
 
     // Add dots
-    svg.append('g')
+    svg
+      .append("g")
       .selectAll("dot")
       .data(data)
       .enter()
       .append("circle")
-      .attr("class", function (d) { return "dot type" + d.category })
-      .attr("cx", function (d) { return x(d.x); })
-      .attr("cy", function (d) { return y(d.y); })
+      .attr("class", function (d) {
+        return "dot type" + d.category;
+      })
+      .attr("cx", function (d) {
+        return x(d.x);
+      })
+      .attr("cy", function (d) {
+        return y(d.y);
+      })
       .attr("r", 5)
-      .style("fill", function (d) { return color[d['category']] })
+      .style("fill", function (d) {
+        return color[d["category"]];
+      })
       .on("mouseover", highlight)
       .on("mouseout", doNotHighlight)
       .on("mousemove", function (e) {
         tooltip
-          .style("left", (e.pageX + 20) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-          .style("top", (e.pageY) + "px");
+          .style("left", e.pageX + 20 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+          .style("top", e.pageY + "px");
       });
 
     // After discussion
@@ -850,9 +1007,9 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     //   .attr("y",d=>y(d.y))
     //   .style("font-size", "10px")
 
-
     // Draw a tooltip
-    const tooltip = d3.select("figure#scatter")
+    const tooltip = d3
+      .select("figure#scatter")
       .append("div")
       .style("opacity", 0)
       .style("position", "absolute")
@@ -862,7 +1019,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       .style("border-radius", "5px")
       .style("padding", "10px");
   }
-
 
   /**
    * @description draw a scatter chart for word-2-vec using the data using d3
@@ -870,106 +1026,120 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
 
   drawScatterWordChart(data_str: string) {
     let data: Array<{
-      "word": string,
-      "x": number,
-      "y": number,
-      "wcount": number
+      word: string;
+      x: number;
+      y: number;
+      wcount: number;
     }> = JSON.parse(data_str);
 
-    const normWcount = d3.scaleLinear()
-      .domain(d3.extent(data, d => +d['wcount']))
-      .range([1, 2])
+    const normWcount = d3
+      .scaleLinear()
+      .domain(d3.extent(data, (d) => +d["wcount"]))
+      .range([1, 2]);
 
     let margin = { top: 10, right: 30, bottom: 30, left: 60 },
       width = 750 - margin.left - margin.right,
       height = 750 - margin.top - margin.bottom;
 
-
     function zoom(svg) {
-      const extent: [[number, number], [number, number]] = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
+      const extent: [[number, number], [number, number]] = [
+        [margin.left, margin.top],
+        [width - margin.right, height - margin.top],
+      ];
 
-      svg.call(d3.zoom()
-        .scaleExtent([1, 8])
-        .translateExtent(extent)
-        .extent(extent)
-        .on("zoom", zoomed));
+      svg.call(
+        d3
+          .zoom()
+          .scaleExtent([1, 8])
+          .translateExtent(extent)
+          .extent(extent)
+          .on("zoom", zoomed),
+      );
 
       function zoomed(event) {
-        x.range([margin.left, width - margin.right].map(d => event.transform.applyX(d)));
-        svg.selectAll(".dots circle").attr("x", d => x(d.x))//.attr("width", x.bandwidth());
+        x.range(
+          [margin.left, width - margin.right].map((d) =>
+            event.transform.applyX(d),
+          ),
+        );
+        svg.selectAll(".dots circle").attr("x", (d) => x(d.x)); //.attr("width", x.bandwidth());
         svg.selectAll(".x-axis").call(xAxis);
       }
     }
 
-
     // Add X axis
-    const x = d3.scaleLinear()
-      .domain([d3.min(data, d => d.x), d3.max(data, d => d.x)])
+    const x = d3
+      .scaleLinear()
+      .domain([d3.min(data, (d) => d.x), d3.max(data, (d) => d.x)])
       .range([0, width]);
 
     // Add Y axis
-    const y = d3.scaleLinear()
-      .domain([d3.min(data, d => d.y), d3.max(data, d => d.y)])
+    const y = d3
+      .scaleLinear()
+      .domain([d3.min(data, (d) => d.y), d3.max(data, (d) => d.y)])
       .range([height, 0]);
 
     // append the svg object to the body of the page
-    const svg = d3.select("figure#scatter")
+    const svg = d3
+      .select("figure#scatter")
       .append("svg")
       .attr("id", "svgstart")
-      .attr("viewBox", "0, 0," + (width + margin.left + margin.right) + "," + (height + margin.top + margin.bottom))
+      .attr(
+        "viewBox",
+        "0, 0," +
+          (width + margin.left + margin.right) +
+          "," +
+          (height + margin.top + margin.bottom),
+      )
       // .attr("width", width + margin.left + margin.right)
       // .attr("height", height + margin.top + margin.bottom)
       .call(zoom)
       .append("g")
-      .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    const xAxis = (g) =>
+      g
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickSizeOuter(0));
 
-    const xAxis = g => g
-      .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickSizeOuter(0))
-
-    const yAxis = g => g
-      // .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
+    const yAxis = (g) =>
+      g
+        // .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
     // .call(g => g.select(".domain").remove())
 
     // Draw x-axis
-    svg.append("g")
-      .call(xAxis)
+    svg.append("g").call(xAxis);
     // .attr("transform", "translate(0," + height + ")")
     // .call(d3.axisBottom(x));
 
     // Draw y-axis
-    svg.append("g")
-      .call(yAxis)
+    svg.append("g").call(yAxis);
     // .call(d3.axisLeft(y));
-
 
     // console.log(color('0'));
     // Highlight the specie that is hovered
     const highlight = function (e, d) {
-      console.log(e)
+      console.log(e);
 
       d3.selectAll(".dot")
         .transition()
         .duration(200)
         .style("fill", "lightgrey")
-        .attr("r", d => 15 * (normWcount(d['wcount'])))
+        .attr("r", (d) => 15 * normWcount(d["wcount"]));
 
       d3.selectAll(".type" + d.word)
         .transition()
         .duration(200)
         .style("fill", "red")
-        .attr("r", d => 35 * (normWcount(d['wcount'])))
+        .attr("r", (d) => 35 * normWcount(d["wcount"]));
 
       tooltip
         .html("Word: " + d.word + "<br>x: " + d.x + "<br>y: " + d.y)
-        .style("opacity", 1)
+        .style("opacity", 1);
 
-      d3.selectAll(".dottext")
-        .style("opacity", 0)
-    }
+      d3.selectAll(".dottext").style("opacity", 0);
+    };
 
     // Highlight the specie that is hovered
     const doNotHighlight = function (e, d) {
@@ -977,52 +1147,58 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         .transition()
         .duration(200)
         .style("fill", "lightgrey")
-        .attr("r", d => 5 * (normWcount(d['wcount'])))
+        .attr("r", (d) => 5 * normWcount(d["wcount"]));
 
       tooltip
         .style("opacity", 0)
         .style("left", "0px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
         .style("top", "0px");
 
-      d3.selectAll(".dottext")
-        .style("opacity", 1)
-    }
-
+      d3.selectAll(".dottext").style("opacity", 1);
+    };
 
     // Add dots
-    svg.append('g')
+    svg
+      .append("g")
       .selectAll("dot")
       .data(data)
       .enter()
       .append("circle")
-      .attr("class", function (d) { return "dot type" + d.word })
-      .attr("cx", function (d) { return x(d.x); })
-      .attr("cy", function (d) { return y(d.y); })
-      .attr("r", d => 5 * (normWcount(d['wcount'])))
+      .attr("class", function (d) {
+        return "dot type" + d.word;
+      })
+      .attr("cx", function (d) {
+        return x(d.x);
+      })
+      .attr("cy", function (d) {
+        return y(d.y);
+      })
+      .attr("r", (d) => 5 * normWcount(d["wcount"]))
       .style("fill", "black")
       .on("mouseover", highlight)
       .on("mouseout", doNotHighlight)
       .on("mousemove", function (e) {
         tooltip
-          .style("left", (e.pageX + 20) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-          .style("top", (e.pageY) + "px");
+          .style("left", e.pageX + 20 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+          .style("top", e.pageY + "px");
       });
 
     // After discussion
-    svg.append('g')
+    svg
+      .append("g")
       .selectAll("dottext")
       .data(data)
       .enter()
       .append("text")
       .attr("class", "dottext")
-      .text(d => d.word)
-      .attr("x", d => (x(d.x) + 5))
-      .attr("y", d => (y(d.y) - 3))
-      .style("font-size", "10px")
-
+      .text((d) => d.word)
+      .attr("x", (d) => x(d.x) + 5)
+      .attr("y", (d) => y(d.y) - 3)
+      .style("font-size", "10px");
 
     // Draw a tooltip
-    const tooltip = d3.select("figure#scatter")
+    const tooltip = d3
+      .select("figure#scatter")
       .append("div")
       .style("opacity", 0)
       .style("position", "absolute")
@@ -1032,7 +1208,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       .style("border-radius", "5px")
       .style("padding", "10px");
   }
-
 
   // /**
   //  * @description draw a network chart using the data using d3
@@ -1070,7 +1245,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //     .append("g")
   //     .attr("transform",
   //           "translate(" + margin.left + "," + margin.top + ")");
-
 
   //   // Highlight the specie that is hovered
   //   const highlight = function(e,d){
@@ -1136,7 +1310,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //       .style("top", (e.pageY) + "px");
   //     });
 
-
   //     const dataon = function(e,d){
   //       console.log("mouse on",d);
   //       svg
@@ -1156,8 +1329,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   //     // .text('사이중심성') //['사이중심성','근접중심성','빈도수','연결중심성','eigen value']
   //     // .on("mouseover",dataon)
   //     // .on("mouseout",dataoff);
-
-
 
   //   // d3.select("svg")
   //   svg.append("g")
@@ -1207,7 +1378,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
    */
 
   drawNetworkChart(data_str: string) {
-    let data: any
+    let data: any =
       //   {
       //     "links" : Array<
       //       {"source":number,
@@ -1222,16 +1393,18 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       //       "name":string,
       //       "count":number}>
       // }
-      = JSON.parse(data_str);
+      JSON.parse(data_str);
 
     // normalize count
-    const normCount = d3.scaleLinear()
-      .domain(d3.extent(data['nodes'], d => +d['count']))
-      .range([0, 1])
+    const normCount = d3
+      .scaleLinear()
+      .domain(d3.extent(data["nodes"], (d) => +d["count"]))
+      .range([0, 1]);
 
-    const normWeight = d3.scaleLinear()
-      .domain(d3.extent(data['links'], d => +d['weight']))
-      .range([0, 1])
+    const normWeight = d3
+      .scaleLinear()
+      .domain(d3.extent(data["links"], (d) => +d["weight"]))
+      .range([0, 1]);
 
     // test
     // console.log(d3.extent(data['nodes'], d=>+d['count']));
@@ -1246,7 +1419,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       top: 20,
       bottom: 50,
       right: 30,
-      left: 50
+      left: 50,
     };
 
     //Extract data from dataset
@@ -1255,37 +1428,54 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     var width = 1000 - margin.left - margin.right;
     var height = 1000 - margin.top - margin.bottom;
     //Load Color Scale
-    var color = d3.scaleSequential()
+    var color = d3
+      .scaleSequential()
       .domain([0, nodes.length])
-      .interpolator(d3.interpolateSinebow)
+      .interpolator(d3.interpolateSinebow);
 
     //Create an SVG element and append it to the DOM
-    var svg = d3.select("figure#network")
+    var svg = d3
+      .select("figure#network")
       .append("svg")
       .attr("id", "svgstart")
-      .attr("viewBox", "0, 0," + (width + margin.left + margin.right) + "," + (height + margin.top + margin.bottom))
-      .call(d3.zoom()
-        //   .extent([[0, 0], [width, height]])
-        //   .scaleExtent([1, 10])
-        .on("zoom", function (e, d) {
-          g.attr("transform", e.transform)
-        }))
+      .attr(
+        "viewBox",
+        "0, 0," +
+          (width + margin.left + margin.right) +
+          "," +
+          (height + margin.top + margin.bottom),
+      )
+      .call(
+        d3
+          .zoom()
+          //   .extent([[0, 0], [width, height]])
+          //   .scaleExtent([1, 10])
+          .on("zoom", function (e, d) {
+            g.attr("transform", e.transform);
+          }),
+      );
 
-    var g = svg.append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-
+    var g = svg
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     //Load External Data
     // d3.json("got_social_graph.json", function(dataset){
 
     //Create Force Layout
-    var force = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink()                               // This force provides links between nodes
-        .id(function (d) { return d['id']; })                     // This provide  the id of a node
-        .links(data.links)                                    // and this the list of links
+    var force = d3
+      .forceSimulation(nodes)
+      .force(
+        "link",
+        d3
+          .forceLink() // This force provides links between nodes
+          .id(function (d) {
+            return d["id"];
+          }) // This provide  the id of a node
+          .links(data.links), // and this the list of links
       )
-      .force("charge", d3.forceManyBody().strength(-200))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("charge", d3.forceManyBody().strength(-200)) // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
     // Highlight the specie that is hovered
     const highlight = function (e, d) {
@@ -1293,14 +1483,14 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         .transition()
         .duration(200)
         .style("fill", "#FEE2C5")
-        .attr("r", 3)
+        .attr("r", 3);
 
       d3.selectAll(".type" + d.id)
         .transition()
         .duration(200)
         .style("fill", "#F66B0E")
-        .attr("r", 7)
-    }
+        .attr("r", 7);
+    };
 
     // Highlight the specie that is hovered
     const doNotHighlight = function (e, d) {
@@ -1308,66 +1498,94 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         .transition()
         .duration(200)
         .style("fill", "#7FB5FF")
-        .attr("r", function (d) { return normCount(d['count']) * 7 < 1 ? 1 : normCount(d['count'] * 7) })
+        .attr("r", function (d) {
+          return normCount(d["count"]) * 7 < 1 ? 1 : normCount(d["count"] * 7);
+        });
 
-      d3.selectAll(".dottext")
-        .style("opacity", 1)
-    }
-
-
+      d3.selectAll(".dottext").style("opacity", 1);
+    };
 
     //Add links to SVG
-    var link = g.selectAll(".link")
+    var link = g
+      .selectAll(".link")
       .data(links)
       .enter()
       .append("line")
-      .style("stroke-width", function (d) { return normWeight(d['weight']) * 5 < 1 ? 1 : normWeight(d['weight']) * 5 })
+      .style("stroke-width", function (d) {
+        return normWeight(d["weight"]) * 5 < 1
+          ? 1
+          : normWeight(d["weight"]) * 5;
+      })
       .attr("class", "link")
-      .style("stroke", "#C4DDFF")
-
+      .style("stroke", "#C4DDFF");
 
     //Add nodes to SVG
-    var node = g.selectAll(".node")
+    var node = g
+      .selectAll(".node")
       .data(nodes)
       .enter()
       .append("g")
-      .attr("class", "node")
+      .attr("class", "node");
 
     //Add labels to each node
-    var label = node.append("text")
+    var label = node
+      .append("text")
       .attr("dx", 12)
       .attr("dy", "0.35em")
-      .attr("font-size", function (d) { return normCount(d['count']) * 12 < 1 ? 9 : normCount(d['count']) * 12 })
-      .text(function (d) { return d['name']; });
+      .attr("font-size", function (d) {
+        return normCount(d["count"]) * 12 < 1 ? 9 : normCount(d["count"]) * 12;
+      })
+      .text(function (d) {
+        return d["name"];
+      });
 
     //Add circles to each node
-    var circle = node.append("circle")
-      .attr("r", function (d) { return normCount(d['count']) * 7 < 1 ? 1 : normCount(d['count']) * 7 })
+    var circle = node
+      .append("circle")
+      .attr("r", function (d) {
+        return normCount(d["count"]) * 7 < 1 ? 1 : normCount(d["count"]) * 7;
+      })
       .attr("fill", "#7FB5FF")
       // .attr("fill", function(d){ return color(d['id']); })
-      .attr("class", function (d) { return "dot type" + d['id'] })
+      .attr("class", function (d) {
+        return "dot type" + d["id"];
+      })
       .on("mouseover", highlight)
-      .on("mouseout", doNotHighlight)
-
+      .on("mouseout", doNotHighlight);
 
     //This function will be executed for every tick of force layout
     force.on("tick", function () {
       //Set X and Y of node
-      node.attr("r", function (d) { return d['degree_cen']; })
-        .attr("cx", function (d) { return d['x']; })
-        .attr("cy", function (d) { return d['y']; });
+      node
+        .attr("r", function (d) {
+          return d["degree_cen"];
+        })
+        .attr("cx", function (d) {
+          return d["x"];
+        })
+        .attr("cy", function (d) {
+          return d["y"];
+        });
       //Set X, Y of link
       link
-        .attr("x1", function (d) { return d['source']['x']; })
-        .attr("y1", function (d) { return d['source']['y']; })
-        .attr("x2", function (d) { return d['target']['x']; })
-        .attr("y2", function (d) { return d['target']['y']; });
+        .attr("x1", function (d) {
+          return d["source"]["x"];
+        })
+        .attr("y1", function (d) {
+          return d["source"]["y"];
+        })
+        .attr("x2", function (d) {
+          return d["target"]["x"];
+        })
+        .attr("y2", function (d) {
+          return d["target"]["y"];
+        });
       //Shift node a little
-      node.attr("transform", function (d) { return "translate(" + d['x'] + "," + d['y'] + ")"; });
+      node.attr("transform", function (d) {
+        return "translate(" + d["x"] + "," + d["y"] + ")";
+      });
     });
-
   }
-
 
   /**
    * @description draw a tree chart using the data using d3
@@ -1380,35 +1598,41 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     let width = 600;
     const dx = width / 4;
     const dy = width / 10;
-    const margin = ({ top: 10, right: 40, bottom: 10, left: 40 });
+    const margin = { top: 10, right: 40, bottom: 10, left: 40 };
 
-    let diagonal: Function = d3.linkHorizontal().x(d => d['y']).y(d => d['x']);
+    let diagonal: Function = d3
+      .linkHorizontal()
+      .x((d) => d["y"])
+      .y((d) => d["x"]);
 
     const tree = d3.tree().nodeSize([dx, dy]);
     const root = d3.hierarchy(data);
 
-    root['x0'] = dy / 2;
-    root['y0'] = 0;
+    root["x0"] = dy / 2;
+    root["y0"] = 0;
     root.descendants().forEach((d, i) => {
-      d['num'] = i;
-      d['_children'] = d['children'];
+      d["num"] = i;
+      d["_children"] = d["children"];
       // if (d['depth'] && d['data']['name']['length'] !== 7) d['children'] = null;
     });
 
-    const svg = d3.select("figure#tree")
+    const svg = d3
+      .select("figure#tree")
       .append("svg")
       .attr("id", "svgstart")
       .attr("viewBox", [-margin.left, -margin.top, width, dx].join())
       .style("font", "10px sans-serif")
       .style("user-select", "none");
 
-    const gLink = svg.append("g")
+    const gLink = svg
+      .append("g")
       .attr("fill", "none")
       .attr("stroke", "#555")
       .attr("stroke-opacity", 0.4)
       .attr("stroke-width", 1.5);
 
-    const gNode = svg.append("g")
+    const gNode = svg
+      .append("g")
       .attr("cursor", "pointer")
       .attr("pointer-events", "all");
 
@@ -1422,85 +1646,109 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
 
       let left = root;
       let right = root;
-      root.eachBefore(node => {
-        if (node['x'] < left['x']) left = node;
-        if (node['x'] > right['x']) right = node;
+      root.eachBefore((node) => {
+        if (node["x"] < left["x"]) left = node;
+        if (node["x"] > right["x"]) right = node;
       });
 
-      const height = right['x'] - left['x'] + margin['top'] + margin['bottom'];
+      const height = right["x"] - left["x"] + margin["top"] + margin["bottom"];
 
-      const transition = svg.transition()
+      const transition = svg
+        .transition()
         // .duration(duration)
-        .attr("viewBox", [-margin['left'], left['x'] - margin['top'], width, height].join())
-        .tween("resize", window['ResizeObserver'] ? null : () => () => svg.dispatch("toggle"));
+        .attr(
+          "viewBox",
+          [-margin["left"], left["x"] - margin["top"], width, height].join(),
+        )
+        .tween(
+          "resize",
+          window["ResizeObserver"] ? null : () => () => svg.dispatch("toggle"),
+        );
 
       // Update the nodes…
-      const node = gNode.selectAll("g")
-        .data(nodes, d => d['num']);
+      const node = gNode.selectAll("g").data(nodes, (d) => d["num"]);
 
       // Enter any new nodes at the parent's previous position.
-      const nodeEnter = node.enter().append("g")
-        .attr("transform", d => `translate(${source['y0']},${source['x0']})`)
+      const nodeEnter = node
+        .enter()
+        .append("g")
+        .attr("transform", (d) => `translate(${source["y0"]},${source["x0"]})`)
         .attr("fill-opacity", 0)
         .attr("stroke-opacity", 0)
         .on("click", (event, d) => {
-          d['children'] = d['children'] ? null : d['_children'];
+          d["children"] = d["children"] ? null : d["_children"];
           update(d);
         });
 
-      nodeEnter.append("circle")
+      nodeEnter
+        .append("circle")
         .attr("r", 2.5)
-        .attr("fill", d => d['_children'] ? "#555" : "#999")
+        .attr("fill", (d) => (d["_children"] ? "#555" : "#999"))
         .attr("stroke-width", 10);
 
-      nodeEnter.append("text")
+      nodeEnter
+        .append("text")
         .attr("dy", "0.31em")
-        .attr("x", d => d['_children'] ? -6 : 6)
-        .attr("text-anchor", d => d['_children'] ? "end" : "start")
-        .text(d => d.data.title ? d.data.title : null)
-        .clone(true).lower()
+        .attr("x", (d) => (d["_children"] ? -6 : 6))
+        .attr("text-anchor", (d) => (d["_children"] ? "end" : "start"))
+        .text((d) => (d.data.title ? d.data.title : null))
+        .clone(true)
+        .lower()
         .attr("stroke-linejoin", "round")
         .attr("stroke-width", 3)
         .attr("stroke", "white");
 
       // Transition nodes to their new position.
-      const nodeUpdate = node.merge(nodeEnter).transition(transition)
-        .attr("transform", d => `translate(${d['y']},${d['x']})`)
+      const nodeUpdate = node
+        .merge(nodeEnter)
+        .transition(transition)
+        .attr("transform", (d) => `translate(${d["y"]},${d["x"]})`)
         .attr("fill-opacity", 1)
         .attr("stroke-opacity", 1);
 
       // Transition exiting nodes to the parent's new position.
-      const nodeExit = node.exit().transition(transition).remove()
-        .attr("transform", d => `translate(${source['y']},${source['x']})`)
+      const nodeExit = node
+        .exit()
+        .transition(transition)
+        .remove()
+        .attr("transform", (d) => `translate(${source["y"]},${source["x"]})`)
         .attr("fill-opacity", 0)
         .attr("stroke-opacity", 0);
 
       // Update the links…
-      const link = gLink.selectAll("path")
-        .data(links, d => d['target']['num']);
+      const link = gLink
+        .selectAll("path")
+        .data(links, (d) => d["target"]["num"]);
 
       // Enter any new links at the parent's previous position.
-      const linkEnter = link.enter().append("path")
-        .attr("d", d => {
-          const o = { x: source['x0'], y: source['y0'] };
+      const linkEnter = link
+        .enter()
+        .append("path")
+        .attr("d", (d) => {
+          const o = { x: source["x0"], y: source["y0"] };
           return diagonal({ source: o, target: o });
         });
 
       // Transition links to their new position.
-      link.merge(linkEnter).transition(transition)
+      link
+        .merge(linkEnter)
+        .transition(transition)
         .attr("d", <null>diagonal);
 
       // Transition exiting nodes to the parent's new position.
-      link.exit().transition(transition).remove()
-        .attr("d", d => {
-          const o = { x: source['x'], y: source['y'] };
+      link
+        .exit()
+        .transition(transition)
+        .remove()
+        .attr("d", (d) => {
+          const o = { x: source["x"], y: source["y"] };
           return diagonal({ source: o, target: o });
         });
 
       // Stash the old positions for transition.
-      root.eachBefore(d => {
-        d['x0'] = d['x'];
-        d['y0'] = d['y'];
+      root.eachBefore((d) => {
+        d["x0"] = d["x"];
+        d["y0"] = d["y"];
       });
     }
 
@@ -1508,8 +1756,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
 
     return svg.node();
   }
-
-
 
   drawTopicModeling(data_str: string) {
     let data = JSON.parse(data_str);
@@ -1558,7 +1804,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
     // else{
     // require.js not available: dynamically load d3 & LDAvis
     // LDAvis_load_lib("https://d3js.org/d3.v5.js", function(){
-    lda.ldavis('#ldavis', data);
+    lda.ldavis("#ldavis", data);
     // LDAvis_load_lib("https://cdn.jsdelivr.net/gh/bmabey/pyLDAvis@3.2.2/pyLDAvis/js/ldavis.v3.0.0.js", function(){
     // var win = window.open('./ldavis.html', 'Topic Modeling','width=#, height=#');
     // win.document.write("<script>lda.ldavis('#ldavis', data);</script>");
@@ -1574,33 +1820,44 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
 
   async saveSvg(): Promise<void> {
     const svg = d3.select("svg#svgstart");
-    if (!this.analysisedData || !svg) return alert("분석이 완료되지 않았거나 문제가 발생했습니다.\n잠시후 다시 시도해주세요");
+    if (!this.analysisedData || !svg)
+      return alert(
+        "분석이 완료되지 않았거나 문제가 발생했습니다.\n잠시후 다시 시도해주세요",
+      );
 
-    svgAsPngUri(svg.node(), { scale: 0.2, backgroundColor: "white", excludeUnusedCss: true },).then(uri => {
+    svgAsPngUri(svg.node(), {
+      scale: 0.2,
+      backgroundColor: "white",
+      excludeUnusedCss: true,
+    }).then((uri) => {
       //save uri to mongo DB
 
       let data = JSON.stringify({
-        'userEmail': this.email,
-        'keyword': this.analysisedData.keyword,
-        'savedDate': this.analysisedData.savedDate,
-        'analysisDate': this.analysisedData.analysisDate,
-        'chartImg': uri,
-        'analysis': this.analysisedData.analysis,
-        'option1': this.optionValue1,
-        'option2': this.optionValue2,
-        'option3': this.optionValue3,
-        'jsonDocId': this.analysisedData.jsonDocId,
+        userEmail: this.email,
+        keyword: this.analysisedData.keyword,
+        savedDate: this.analysisedData.savedDate,
+        analysisDate: this.analysisedData.analysisDate,
+        chartImg: uri,
+        analysis: this.analysisedData.analysis,
+        option1: this.optionValue1,
+        option2: this.optionValue2,
+        option3: this.optionValue3,
+        jsonDocId: this.analysisedData.jsonDocId,
       });
 
       // console.log(data);
-      this.middlewareService.postDataToFEDB('/textmining/uploadChart', data).then(res => {
-        // alert("선택하신 차트가 내 분석함에 저장되었습니다.");
-        if (confirm("선택하신 차트가 내 분석함에 저장되었습니다. 내 분석함 페이지로 이동하시겠습니까?"))
-          this.toMyAnalysis();
-      });
-
+      this.middlewareService
+        .postDataToFEDB("/textmining/uploadChart", data)
+        .then((res) => {
+          // alert("선택하신 차트가 내 분석함에 저장되었습니다.");
+          if (
+            confirm(
+              "선택하신 차트가 내 분석함에 저장되었습니다. 내 분석함 페이지로 이동하시겠습니까?",
+            )
+          )
+            this.toMyAnalysis();
+        });
     });
-
   }
 
   downloadPng() {
