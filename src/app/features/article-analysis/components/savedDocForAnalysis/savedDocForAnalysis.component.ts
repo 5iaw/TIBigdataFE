@@ -1,3 +1,4 @@
+// savedDocForAnalysis.component.ts
 import { Component, OnInit, Output } from "@angular/core";
 import { MydocModel } from "src/app/core/models/mydoc.model";
 import { UserProfile } from "src/app/core/models/user.model";
@@ -12,12 +13,12 @@ import { EventEmitter } from "@angular/core";
 })
 
 export class savedDocForAnalysis implements OnInit{
-    
+
   private _savedDocs: Array<MydocModel>;
   private _isSavedDocsLoaded: boolean = false;
   private _isSavedDocsEmpty: boolean;
   private _totalSavedDocsNum: number;
-  
+
   private _userProfile: UserProfile;
 
   constructor(
@@ -34,7 +35,7 @@ export class savedDocForAnalysis implements OnInit{
     this.emitData(); //send userEmail
   }
 
-  
+
   @Output() sender = new EventEmitter();
 
   /**
@@ -49,7 +50,7 @@ export class savedDocForAnalysis implements OnInit{
   }
 
   /**
-     * @description emit the data selected by user to parents class 
+     * @description emit the data selected by user to parents class
      */
   emitData(activity?:string, selectedKeyword?:string, selectedSavedDate?:string, isSelectedPreprocessed?:boolean){
     this.sender.emit(JSON.stringify({
@@ -67,14 +68,14 @@ export class savedDocForAnalysis implements OnInit{
   public set savedDocs(value: Array<MydocModel>) {
     this._savedDocs = value;
   }
-  
+
   public get isSavedDocsLoaded() {
     return this._isSavedDocsLoaded;
   }
   public set isSavedDocsLoaded(value) {
     this._isSavedDocsLoaded = value;
   }
-  
+
   public get isSavedDocsEmpty() {
     return this._isSavedDocsEmpty;
   }
@@ -87,7 +88,7 @@ export class savedDocForAnalysis implements OnInit{
   public set totalSavedDocsNum(value: number) {
     this._totalSavedDocsNum = value;
   }
-  
+
   public get userProfile(): UserProfile {
     return this._userProfile;
   }

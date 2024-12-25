@@ -1,3 +1,4 @@
+// analysis.component.ts
 import { Component, Injectable, OnInit } from "@angular/core";
 import { abstractAnalysis } from "../abstractAnalysisPage";
 import * as d3 from 'd3';
@@ -43,8 +44,8 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
   results: string | null = null;
 
   // constructor(
-  //   _middlewareService, 
-  //   _userSavedDocumentService, 
+  //   _middlewareService,
+  //   _userSavedDocumentService,
   //   private router: Router) {
   //     super(_middlewareService,
   //       _userSavedDocumentService);
@@ -486,7 +487,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         const tr = tbody.append("tr");
         tr.append("td").text(i + 1);
         const td = tr.append("td");
-        
+
         let categoryCount = 0;
         for (let j = 0; j < data.length; j++) {
           console.log(`Checking if data[${j}]['category'] == ${i}`);
@@ -534,7 +535,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
         });
 
         console.log("Finished appending rows.");
-    
+
 
     }
 
@@ -1349,7 +1350,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit  {
       .on("mouseout", doNotHighlight)
 
 
-    //This function will be executed for every tick of force layout 
+    //This function will be executed for every tick of force layout
     force.on("tick", function () {
       //Set X and Y of node
       node.attr("r", function (d) { return d['degree_cen']; })
