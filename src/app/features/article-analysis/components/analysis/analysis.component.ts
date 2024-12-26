@@ -163,27 +163,33 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
     //   return;
     // }
 
-    // Check for preprocessed document validity
-    if (this.selectedSavedDate && !this.isSelectedPreprocessed) {
-      alert(
-        "The selected document has not been preprocessed. Please preprocess it first!",
+    // if (this.selectedSavedDate == null) return alert("문서를 선택해주세요!");
+    if (!this.isSelectedPreprocessed)
+      return alert(
+        "선택하신 문서는 전처리되지 않은 문서입니다. 전처리를 먼저 해주세요!",
       );
-      return;
-    }
+    this.optionValue1 =
+      <HTMLInputElement>document.getElementById(analysis + "_option1") != null
+        ? (<HTMLInputElement>document.getElementById(analysis + "_option1"))
+            .value
+        : null;
+    this.optionValue2 =
+      <HTMLInputElement>document.getElementById(analysis + "_option2") != null
+        ? (<HTMLInputElement>document.getElementById(analysis + "_option2"))
+            .value
+        : null;
+    this.optionValue3 =
+      <HTMLInputElement>document.getElementById(analysis + "_option3") != null
+        ? (<HTMLInputElement>document.getElementById(analysis + "_option3"))
+            .value
+        : null;
 
-    // Retrieve options from the input fields
-    const option1 =
-      (<HTMLInputElement>document.getElementById(analysis + "_option1"))
-        ?.value || null;
-    const option2 =
-      (<HTMLInputElement>document.getElementById(analysis + "_option2"))
-        ?.value || null;
-    const option3 =
-      (<HTMLInputElement>document.getElementById(analysis + "_option3"))
-        ?.value || null;
-
+    this.LoadingWithMask();
+    document
+      .getElementById("cancelbtn")
+      .addEventListener("click", this.closeLoadingWithMask);
     // Prepare the data payload dynamically
-    const data = JSON.stringify({
+    let data = JSON.stringify({
       userEmail: this.email,
       keyword: this.selectedSavedDate ? this.selectedKeyword : null, // Include keyword if a document is selected
       savedDate: this.selectedSavedDate || null, // Include savedDate if a document is selected
@@ -195,46 +201,75 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
               path: file.path,
             }))
           : null, // Include files if selected
-      options: {
-        option1: option1,
-        option2: option2,
-        option3: option3,
-      },
+      option1: this.optionValue1,
+      option2: this.optionValue2,
+      option3: this.optionValue3,
       analysisName: analysis,
     });
+    this.clearResult();
 
+    console.log(data);
     // Show loading indicator
-    this.LoadingWithMask();
-    document
-      .getElementById("cancelbtn")
-      ?.addEventListener("click", this.closeLoadingWithMask);
+    // this.LoadingWithMask();
+    // document
+    //   .getElementById("cancelbtn")
+    //   ?.addEventListener("click", this.closeLoadingWithMask);
+    let res = await this.middlewareService.postDataToFlask(
+      "/spark/combined_submit_job",
+      data,
+    );
+    console.log(res);
+    console.log("testing res.errMsg" + res.errMsg);
+    console.log("testing res.returnCode");
+
+    if (res == null) {
+      this.isDataAnalysised = false;
+      alert("내부적인 오류가 발생했습니다. 잠시후 다시 시도해주세요");
+      this.closeLoadingWithMask();
+      return;
+    }
+
+    if (res.state != "starting") {
+      console.log(res);
+      alert(res);
+      this.closeLoadingWithMask();
+
+      return;
+    }
+
+    console.log("Job submitted successfully:", res);
+    this.output_path = res.output_path;
+    this.jobId = res.id; // Assuming the response contains the job ID
+    this.jobStatus = "Job submitted, waiting for completion...";
+
+    this.pollJobStatus();
 
     // Send the combined analysis request to the backend
-    try {
-      const response = await this.middlewareService.postDataToFlask(
-        "/spark/submit_combined_job",
-        data,
-      );
-
-      if (!response || response.state !== "starting") {
-        alert("Combined analysis submission failed. Please try again.");
-        this.closeLoadingWithMask();
-        return;
-      }
-
-      // Update job details and start polling for status
-      this.output_path = response.output_path;
-      this.jobId = response.id;
-      this.jobStatus = "Job submitted, waiting for completion...";
-
-      console.log("Combined analysis job submitted successfully:", response);
-      this.pollJobStatus();
-    } catch (error) {
-      console.error("Error submitting combined analysis:", error);
-      alert("An error occurred. Please try again later.");
-    } finally {
-      this.closeLoadingWithMask();
-    }
+    // try {
+    //   const response = await this.middlewareService.postDataToFlask(
+    //     "/spark/submit_combined_job",
+    //     data,
+    //   );
+    //
+    //   if (!response || response.state !== "starting") {
+    //     alert("Combined analysis submission failed. Please try again.");
+    //     this.closeLoadingWithMask();
+    //     return;
+    //   }
+    //
+    //   // Update job details and start polling for status
+    //   this.output_path = response.output_path;
+    //   this.jobId = response.id;
+    //   this.jobStatus = "Job submitted, waiting for completion...";
+    //
+    //   console.log("Combined analysis job submitted successfully:", response);
+    //   this.pollJobStatus();
+    // } catch (error) {
+    //   console.error("Error submitting combined analysis:", error);
+    //   alert("An error occurred. Please try again later.");
+    // } finally {
+    //   this.closeLoadingWithMask();
+    // }
   }
   async runAnalysis(analysis: string): Promise<void> {
     // Check the options
@@ -462,7 +497,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
   // }
   async getAnalysisResult(): Promise<void> {
     const url = `/spark/read_file?output_path=${this.output_path}`; // Route relative to middleware URL
-    console.log("Getting analysis result from", `/spark${url}`);
+    console.log("Getting analysis result from", `${url}`);
 
     try {
       const response = await this.middlewareService.getDataFromFlask(url);
@@ -511,8 +546,8 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
           JSON.stringify(this.analysisedData.result_graph),
         );
       } else if (this.analysis == "hcluster")
+        // }
         this.drawTreeChart(JSON.stringify(this.analysisedData.result_graph));
-      // }
       else if (this.analysis == "topicLDA")
         this.drawTopicModeling(
           JSON.stringify(this.analysisedData.result_graph),

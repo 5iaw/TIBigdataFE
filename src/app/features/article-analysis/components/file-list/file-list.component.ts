@@ -26,6 +26,7 @@ export class FileListComponent implements OnInit {
   currentPath = "";
   newFolderName: string = "";
 
+  selectedFiles: FileSystemEntity[] = []; // Array to store selected files
   // Controls for dynamic fields
   showDisplayValue: boolean = false;
   showKValue: boolean = false;
@@ -99,7 +100,15 @@ export class FileListComponent implements OnInit {
     }
   }
   toggleFileSelection(file: FileSystemEntity): void {
-    file.selected = !file.selected;
+    if (file.selected) {
+      // Add the file to the selectedFiles array if selected
+      if (!this.selectedFiles.includes(file)) {
+        this.selectedFiles.push(file);
+      }
+    } else {
+      // Remove the file from the selectedFiles array if unselected
+      this.selectedFiles = this.selectedFiles.filter((f) => f.id !== file.id);
+    }
     this.updateSelectedFiles(); // Emit the updated selection
   }
 
