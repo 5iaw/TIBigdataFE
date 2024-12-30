@@ -37,6 +37,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
   output_path: string;
   jobId: string | null = null;
 
+  customKeyword: string = "";
   jobStatus: string = "Waiting for job to start...";
   isJobCompleted: boolean = false;
   loading: boolean = false;
@@ -155,94 +156,149 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
     this.selectedFiles = files; // Update the selected files
     console.log("Selected files updated:", this.selectedFiles);
   }
-
+  /**
+   * The main combined analysis function
+   */
   async combinedRunAnalysis(analysis: string): Promise<void> {
-    // Ensure at least one data source is selected
-    // if (!this.selectedSavedDate && this.selectedFiles.length === 0) {
-    //   alert("Please select a preprocessed document or at least one file.");
-    //   return;
-    // }
+    // (1) If no doc is selected => use custom keyword & set savedDate to now
+    if (!this.selectedSavedDate) {
+      if (!this.customKeyword.trim()) {
+        alert("Please select a document or provide a custom keyword!");
+        return;
+      }
+      this.selectedKeyword = this.customKeyword;
+      this.selectedSavedDate = new Date().toISOString();  // <--- new date
+    }
 
-    // if (this.selectedSavedDate == null) return alert("문서를 선택해주세요!");
-    if (!this.isSelectedPreprocessed)
-      return alert(
-        "선택하신 문서는 전처리되지 않은 문서입니다. 전처리를 먼저 해주세요!",
-      );
-    this.optionValue1 =
-      <HTMLInputElement>document.getElementById(analysis + "_option1") != null
-        ? (<HTMLInputElement>document.getElementById(analysis + "_option1"))
-            .value
-        : null;
-    this.optionValue2 =
-      <HTMLInputElement>document.getElementById(analysis + "_option2") != null
-        ? (<HTMLInputElement>document.getElementById(analysis + "_option2"))
-            .value
-        : null;
-    this.optionValue3 =
-      <HTMLInputElement>document.getElementById(analysis + "_option3") != null
-        ? (<HTMLInputElement>document.getElementById(analysis + "_option3"))
-            .value
-        : null;
+    // (2) Gather user’s analysis options
+    this.optionValue1 = (document.getElementById(analysis + "_option1") as HTMLInputElement)?.value || null;
+    this.optionValue2 = (document.getElementById(analysis + "_option2") as HTMLInputElement)?.value || null;
+    this.optionValue3 = (document.getElementById(analysis + "_option3") as HTMLInputElement)?.value || null;
 
     this.LoadingWithMask();
-    document
-      .getElementById("cancelbtn")
-      .addEventListener("click", this.closeLoadingWithMask);
-    // Prepare the data payload dynamically
-    let data = JSON.stringify({
+    document.getElementById("cancelbtn")?.addEventListener("click", this.closeLoadingWithMask);
+
+    // (3) If user selected HDFS files, we may want to do local preprocessing first
+    if (this.selectedFiles.length > 0) {
+      try {
+        // Build a payload for /preprocessing-text-relay
+        const relayPayload = {
+          email: this.email,
+          keyword: this.selectedKeyword,
+          savedDate: this.selectedSavedDate,
+          fileIds: this.selectedFiles.map((f) => f.id), // or f.path
+          wordclass: "010",    // or your own user-chosen
+          stopword: true,      // or a user-chosen boolean
+          synonym: false,
+          compound: false,
+        };
+        console.log("Calling /preprocessing-text-relay with:", relayPayload);
+
+        // (3a) Actually call the relay
+        const relayRes = await this.middlewareService.postDataToFlask(
+          "/preprocessing-text-relay",
+          JSON.stringify(relayPayload)
+        );
+
+        // Check success
+        if (!relayRes || relayRes.success !== true) {
+          console.error("HDFS preprocessing relay failed:", relayRes);
+          alert("Failed to preprocess HDFS files. Please try again.");
+          this.closeLoadingWithMask();
+          return;
+        }
+        // Possibly store the new doc references if your backend returns them
+        console.log("Preprocessing success, got:", relayRes);
+      } catch (error) {
+        console.error("Error calling /preprocessing-text-relay:", error);
+        alert("Error preprocessing HDFS files. Please try again.");
+        this.closeLoadingWithMask();
+        return;
+      }
+    }
+
+    // (4) Now submit the combined job (doc-based + new preprocessed HDFS)
+    const combinedData = JSON.stringify({
       userEmail: this.email,
-      keyword: this.selectedSavedDate ? this.selectedKeyword : null, // Include keyword if a document is selected
-      savedDate: this.selectedSavedDate || null, // Include savedDate if a document is selected
-      selectedFiles:
-        this.selectedFiles.length > 0
-          ? this.selectedFiles.map((file) => ({
-              id: file.id,
-              name: file.name,
-              path: file.path,
-            }))
-          : null, // Include files if selected
+      keyword: this.selectedKeyword,
+      savedDate: this.selectedSavedDate,
+      selectedFiles: this.selectedFiles.length > 0
+        ? this.selectedFiles.map((file) => ({
+            id: file.id,
+            name: file.name,
+            path: file.path,
+          }))
+        : null,
       option1: this.optionValue1,
       option2: this.optionValue2,
       option3: this.optionValue3,
       analysisName: analysis,
     });
+
+    console.log("Submitting combined analysis to /spark/submit_combined_job:", combinedData);
     this.clearResult();
 
-    console.log(data);
-    // Show loading indicator
-    // this.LoadingWithMask();
-    // document
-    //   .getElementById("cancelbtn")
-    //   ?.addEventListener("click", this.closeLoadingWithMask);
-    let res = await this.middlewareService.postDataToFlask(
-      "/spark/combined_submit_job",
-      data,
-    );
-    console.log(res);
-    console.log("testing res.errMsg" + res.errMsg);
-    console.log("testing res.returnCode");
+    try {
+      const submitRes = await this.middlewareService.postDataToFlask(
+        "/spark/submit_combined_job",
+        combinedData
+      );
+      if (!submitRes) {
+        console.error("No response from combined_job");
+        alert("Internal error. Please try again.");
+        this.closeLoadingWithMask();
+        return;
+      }
+      if (submitRes.state !== "starting") {
+        console.error("Analysis job submission error:", submitRes);
+        alert("Job submission error:\n" + JSON.stringify(submitRes));
+        this.closeLoadingWithMask();
+        return;
+      }
 
-    if (res == null) {
-      this.isDataAnalysised = false;
-      alert("내부적인 오류가 발생했습니다. 잠시후 다시 시도해주세요");
+      // Start polling
+      console.log("Combined job started:", submitRes);
+      this.output_path = submitRes.output_path;
+      this.jobId = submitRes.id;
+      this.jobStatus = "Job submitted, waiting for completion...";
+      this.pollJobStatus();
+    } catch (error) {
+      console.error("Error in combinedRunAnalysis final submission:", error);
+      alert("Submission error. Please try again.");
       this.closeLoadingWithMask();
-      return;
     }
+  }
 
-    if (res.state != "starting") {
-      console.log(res);
-      alert(res);
-      this.closeLoadingWithMask();
+  /**
+   * (Unchanged) or minimal changes...
+   */
+  async pollJobStatus(): Promise<void> {
+    console.log("Starting job status polling...");
+    try {
+      const pollingInterval = setInterval(async () => {
+        const status = await this.getJobStatus(Number(this.jobId));
+        console.log("Job status: ", status.state);
 
-      return;
+        if (status.state === "success") {
+          clearInterval(pollingInterval);
+          this.jobStatus = "Job completed successfully!";
+          this.isJobCompleted = true;
+          this.loading = false;
+          await this.getAnalysisResult(); // Then get results
+        } else if (status.state === "failed") {
+          clearInterval(pollingInterval);
+          this.jobStatus = "Job failed.";
+          this.isJobCompleted = true;
+          this.loading = false;
+          alert("분석 실패하였습니다.");
+        } else {
+          this.jobStatus = "Job is still running...";
+        }
+      }, 3000);
+    } catch (error) {
+      console.error("Error polling job status:", error);
     }
-
-    console.log("Job submitted successfully:", res);
-    this.output_path = res.output_path;
-    this.jobId = res.id; // Assuming the response contains the job ID
-    this.jobStatus = "Job submitted, waiting for completion...";
-
-    this.pollJobStatus();
+  }
 
     // Send the combined analysis request to the backend
     // try {
@@ -270,7 +326,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
     // } finally {
     //   this.closeLoadingWithMask();
     // }
-  }
   async runAnalysis(analysis: string): Promise<void> {
     // Check the options
     if (this.selectedSavedDate == null) return alert("문서를 선택해주세요!");
@@ -412,35 +467,35 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
   //       },
   //     );
   // }
-  async pollJobStatus(): Promise<void> {
-    console.log("Starting job status polling...");
-    try {
-      const pollingInterval = setInterval(async () => {
-        const status = await this.getJobStatus(Number(this.jobId));
-        console.log("Job status: ", status.state);
-
-        if (status.state === "success") {
-          clearInterval(pollingInterval);
-          this.jobStatus = "Job completed successfully!";
-          this.isJobCompleted = true;
-          this.loading = false;
-          // alert("분석 완료되었습니다.");
-          // this.closeLoadingWithMask();
-          await this.getAnalysisResult(); // Fetch results after completion
-        } else if (status.state === "failed") {
-          clearInterval(pollingInterval);
-          this.jobStatus = "Job failed.";
-          this.isJobCompleted = true;
-          this.loading = false;
-          alert("분석 실패하었습니다.");
-        } else {
-          this.jobStatus = "Job is still running...";
-        }
-      }, 3000);
-    } catch (error) {
-      console.error("Error polling job status:", error);
-    }
-  }
+  // async pollJobStatus(): Promise<void> {
+  //   console.log("Starting job status polling...");
+  //   try {
+  //     const pollingInterval = setInterval(async () => {
+  //       const status = await this.getJobStatus(Number(this.jobId));
+  //       console.log("Job status: ", status.state);
+  //
+  //       if (status.state === "success") {
+  //         clearInterval(pollingInterval);
+  //         this.jobStatus = "Job completed successfully!";
+  //         this.isJobCompleted = true;
+  //         this.loading = false;
+  //         // alert("분석 완료되었습니다.");
+  //         // this.closeLoadingWithMask();
+  //         await this.getAnalysisResult(); // Fetch results after completion
+  //       } else if (status.state === "failed") {
+  //         clearInterval(pollingInterval);
+  //         this.jobStatus = "Job failed.";
+  //         this.isJobCompleted = true;
+  //         this.loading = false;
+  //         alert("분석 실패하었습니다.");
+  //       } else {
+  //         this.jobStatus = "Job is still running...";
+  //       }
+  //     }, 3000);
+  //   } catch (error) {
+  //     console.error("Error polling job status:", error);
+  //   }
+  // }
 
   // Remember to check jobId
   // getJobStatus(jobId: number) {
@@ -508,6 +563,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
       this.jobId = null;
       this.isJobCompleted = false;
       this.jobStatus = "";
+      console.log(this.analysis)
 
       this.drawResultVisualizations();
     } catch (error) {

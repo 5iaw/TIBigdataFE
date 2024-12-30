@@ -6,16 +6,24 @@
       (sender)="onMessage($event)"
     ></app-savedDocForAnalysis>
 
-    <!-- <app-file-list -->
-    <!--   (selectedFilesChange)="onSelectedFilesChange($event)" -->
-    <!-- ></app-file-list> -->
+    <!-- <div> -->
+      <app-file-list
+        (selectedFilesChange)="onSelectedFilesChange($event)"
+      ></app-file-list>
+    <label>Or Enter a Keyword (if no saved doc):</label>
+    <input
+      type="text"
+      [(ngModel)]="customKeyword"
+      placeholder="Enter a keyword"
+    />
+    <!-- </div> -->
     <span class="section-header">{{
       "analysis.analysisSelection" | translate
     }}</span>
     <span class="section-info">{{
       "analysis.selectAnalysis" | translate
     }}</span>
-    <hr />
+    <hr>
     <div class="pop-container">
       <div class="pop-block">
         <div class="pop-head" id="count-head" (click)="showPop('count')">
