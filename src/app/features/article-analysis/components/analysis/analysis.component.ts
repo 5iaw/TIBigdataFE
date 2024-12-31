@@ -167,81 +167,71 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
         return;
       }
       this.selectedKeyword = this.customKeyword;
-      this.selectedSavedDate = new Date().toISOString();  // <--- new date
+      this.selectedSavedDate = new Date().toISOString(); // <--- new date
     }
 
     // (2) Gather user’s analysis options
-    this.optionValue1 = (document.getElementById(analysis + "_option1") as HTMLInputElement)?.value || null;
-    this.optionValue2 = (document.getElementById(analysis + "_option2") as HTMLInputElement)?.value || null;
-    this.optionValue3 = (document.getElementById(analysis + "_option3") as HTMLInputElement)?.value || null;
+    this.optionValue1 =
+      (document.getElementById(analysis + "_option1") as HTMLInputElement)
+        ?.value || null;
+    this.optionValue2 =
+      (document.getElementById(analysis + "_option2") as HTMLInputElement)
+        ?.value || null;
+    this.optionValue3 =
+      (document.getElementById(analysis + "_option3") as HTMLInputElement)
+        ?.value || null;
 
     this.LoadingWithMask();
-    document.getElementById("cancelbtn")?.addEventListener("click", this.closeLoadingWithMask);
+    document
+      .getElementById("cancelbtn")
+      ?.addEventListener("click", this.closeLoadingWithMask);
 
     // (3) If user selected HDFS files, we may want to do local preprocessing first
-    if (this.selectedFiles.length > 0) {
-      try {
-        // Build a payload for /preprocessing-text-relay
-        const relayPayload = {
-          email: this.email,
-          keyword: this.selectedKeyword,
-          savedDate: this.selectedSavedDate,
-          fileIds: this.selectedFiles.map((f) => f.id), // or f.path
-          wordclass: "010",    // or your own user-chosen
-          stopword: true,      // or a user-chosen boolean
-          synonym: false,
-          compound: false,
-        };
-        console.log("Calling /preprocessing-text-relay with:", relayPayload);
-
-        // (3a) Actually call the relay
-        const relayRes = await this.middlewareService.postDataToFlask(
-          "/preprocessing-text-relay",
-          JSON.stringify(relayPayload)
-        );
-
-        // Check success
-        if (!relayRes || relayRes.success !== true) {
-          console.error("HDFS preprocessing relay failed:", relayRes);
-          alert("Failed to preprocess HDFS files. Please try again.");
-          this.closeLoadingWithMask();
-          return;
-        }
-        // Possibly store the new doc references if your backend returns them
-        console.log("Preprocessing success, got:", relayRes);
-      } catch (error) {
-        console.error("Error calling /preprocessing-text-relay:", error);
-        alert("Error preprocessing HDFS files. Please try again.");
-        this.closeLoadingWithMask();
-        return;
-      }
-    }
+    const relayPayload = {
+      email: this.email,
+      keyword: this.selectedKeyword,
+      savedDate: this.selectedSavedDate,
+      fileIds: this.selectedFiles.map((f) => f.id), // or f.path
+      wordclass: "010", // or your own user-chosen
+      stopword: true, // or a user-chosen boolean
+      synonym: false,
+      compound: false,
+    };
+    console.log("Calling /preprocessing-text-relay with:", relayPayload);
 
     // (4) Now submit the combined job (doc-based + new preprocessed HDFS)
     const combinedData = JSON.stringify({
       userEmail: this.email,
       keyword: this.selectedKeyword,
       savedDate: this.selectedSavedDate,
-      selectedFiles: this.selectedFiles.length > 0
-        ? this.selectedFiles.map((file) => ({
-            id: file.id,
-            name: file.name,
-            path: file.path,
-          }))
-        : null,
+      selectedFiles:
+        this.selectedFiles.length > 0
+          ? this.selectedFiles.map((file) => ({
+              id: file.id,
+              name: file.name,
+              path: file.path,
+            }))
+          : null,
       option1: this.optionValue1,
       option2: this.optionValue2,
       option3: this.optionValue3,
+      wordclass: "010", // or your own user-chosen
+      stopword: true, // or a user-chosen boolean
+      synonym: false,
+      compound: false,
       analysisName: analysis,
     });
 
-    console.log("Submitting combined analysis to /spark/submit_combined_job:", combinedData);
+    console.log(
+      "Submitting combined analysis to /spark/submit_combined_job:",
+      combinedData,
+    );
     this.clearResult();
 
     try {
       const submitRes = await this.middlewareService.postDataToFlask(
         "/spark/submit_combined_job",
-        combinedData
+        combinedData,
       );
       if (!submitRes) {
         console.error("No response from combined_job");
@@ -300,32 +290,32 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
     }
   }
 
-    // Send the combined analysis request to the backend
-    // try {
-    //   const response = await this.middlewareService.postDataToFlask(
-    //     "/spark/submit_combined_job",
-    //     data,
-    //   );
-    //
-    //   if (!response || response.state !== "starting") {
-    //     alert("Combined analysis submission failed. Please try again.");
-    //     this.closeLoadingWithMask();
-    //     return;
-    //   }
-    //
-    //   // Update job details and start polling for status
-    //   this.output_path = response.output_path;
-    //   this.jobId = response.id;
-    //   this.jobStatus = "Job submitted, waiting for completion...";
-    //
-    //   console.log("Combined analysis job submitted successfully:", response);
-    //   this.pollJobStatus();
-    // } catch (error) {
-    //   console.error("Error submitting combined analysis:", error);
-    //   alert("An error occurred. Please try again later.");
-    // } finally {
-    //   this.closeLoadingWithMask();
-    // }
+  // Send the combined analysis request to the backend
+  // try {
+  //   const response = await this.middlewareService.postDataToFlask(
+  //     "/spark/submit_combined_job",
+  //     data,
+  //   );
+  //
+  //   if (!response || response.state !== "starting") {
+  //     alert("Combined analysis submission failed. Please try again.");
+  //     this.closeLoadingWithMask();
+  //     return;
+  //   }
+  //
+  //   // Update job details and start polling for status
+  //   this.output_path = response.output_path;
+  //   this.jobId = response.id;
+  //   this.jobStatus = "Job submitted, waiting for completion...";
+  //
+  //   console.log("Combined analysis job submitted successfully:", response);
+  //   this.pollJobStatus();
+  // } catch (error) {
+  //   console.error("Error submitting combined analysis:", error);
+  //   alert("An error occurred. Please try again later.");
+  // } finally {
+  //   this.closeLoadingWithMask();
+  // }
   async runAnalysis(analysis: string): Promise<void> {
     // Check the options
     if (this.selectedSavedDate == null) return alert("문서를 선택해주세요!");
@@ -563,7 +553,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
       this.jobId = null;
       this.isJobCompleted = false;
       this.jobStatus = "";
-      console.log(this.analysis)
+      console.log(this.analysis);
 
       this.drawResultVisualizations();
     } catch (error) {
