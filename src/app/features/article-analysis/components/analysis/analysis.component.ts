@@ -199,6 +199,7 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
     };
     console.log("Calling /preprocessing-text-relay with:", relayPayload);
 
+    this.analysis = analysis;
     // (4) Now submit the combined job (doc-based + new preprocessed HDFS)
     const combinedData = JSON.stringify({
       userEmail: this.email,
@@ -221,7 +222,6 @@ export class AnalysisComponent extends abstractAnalysis implements OnInit {
       compound: false,
       analysisName: analysis,
     });
-
     console.log(
       "Submitting combined analysis to /spark/submit_combined_job:",
       combinedData,
